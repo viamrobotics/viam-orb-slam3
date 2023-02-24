@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "Installing ORB_SLAM3 external dependencies"
 brew tap viamrobotics/brews
 brew install cmake glew opencv@4 eigen boost openssl pangolin

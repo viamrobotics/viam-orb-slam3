@@ -1,3 +1,4 @@
+#!/bin/bash
 BASEDIR=`pwd`
 echo $BASEDIR
 ORBDIR=$BASEDIR/viam-orb-slam3
