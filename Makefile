@@ -28,8 +28,6 @@ format-setup:
 
 format:
 	find . -type f -not -path \
-		-and ! -path '*viam-cartographer/cartographer*' \
-		-and ! -path '*viam-cartographer/build*' \
 		-and ! -path '*viam-orb-slam3/ORB_SLAM3*' \
 		-and ! -path '*api*' \
 		-and \( -iname '*.h' -o -iname '*.cpp' -o -iname '*.cc' \) \

@@ -2,3 +2,4 @@ version: v1
 plugins:
   - name: cpp
     out: grpc/cpp/gen
+
