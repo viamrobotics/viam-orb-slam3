@@ -72,6 +72,9 @@ sudo apt-get install libboost-all-dev
 ### Linting
 
 ```bash
+# Ubuntu:
+sudo apt install clang-format
+# macOS:
 brew install clang-format
 make format
 ```
