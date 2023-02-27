@@ -35,16 +35,16 @@ format:
 
 setup:
 ifeq ("Darwin", "$(shell uname -s)")
-	cd viam-orb-slam3 && ./setup_orbslam_macos.sh
+	cd viam-orb-slam3 && ./scripts/setup_orbslam_macos.sh
 else
-	cd viam-orb-slam3 && ./setup_orbslam.sh
+	cd viam-orb-slam3 && ./scripts/setup_orbslam_linux.sh
 endif
 
 build:
-	cd viam-orb-slam3 && ./build_orbslam.sh
+	cd viam-orb-slam3 && ./scripts/build_orbslam.sh
 
 test:
-	cd viam-orb-slam3 && ./test_orbslam.sh
+	cd viam-orb-slam3 && ./scripts/test_orbslam.sh
 
 all: bufinstall buf setup build test
 

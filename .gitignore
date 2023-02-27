@@ -16,6 +16,3 @@ bin/
 
 # code editor settings
 .vscode
-
-# grpc
-slam-libraries/grpc

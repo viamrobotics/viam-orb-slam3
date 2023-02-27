@@ -78,13 +78,13 @@ sudo apt install clang-format
 brew install clang-format
 make format
 ```
-### Testing
 
-You can also run:
+### Testing
 
 ```bash
 make test
 ```
+
 ### Working with submodules
 
 #### Commit and push
@@ -101,10 +101,10 @@ When changing branches in a submodule, update `.gitmodules`, e.g., changing to a
 
 ```bash
 ...
-[submodule "slam-libraries/cartographer"]
-        path = slam-libraries/cartographer
-        url = git@github.com:kkufieta/cartographer.git
-        branch=kk/fix-install
+[submodule "viam-orb-slam3/ORB_SLAM3"]
+        path = viam-orb-slam3/ORB_SLAM3
+        url = git@github.com:kkufieta/ORB_SLAM3.git
+        branch=kk/fix-this-bug
 ```
 
 Commit & push the changes.
