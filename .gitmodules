@@ -1,0 +1,3 @@
+[submodule "viam-orb-slam3/ORB_SLAM3"]
+	path = viam-orb-slam3/ORB_SLAM3
+	url = https://github.com/viamrobotics/ORB_SLAM3
