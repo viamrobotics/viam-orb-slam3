@@ -1,4 +1,4 @@
-# Viam ORB\_SLAM3 Module
+# viam-orb-slam3
 
 ## (In)stability Notice
 > **Warning**
@@ -6,13 +6,26 @@
 
 ## Overview
 
-ORB\_SLAM3 is a SLAM system for feature based mapping using monocular, rgbd, and stereo camera setups. 
-
-For more information see [the official ORB_SLAM3 Repo](https://github.com/UZ-SLAMLab/ORB_SLAM3).
-
-This is the [modular resource](https://docs.viam.com/program/extend/modular-resources/) code that wraps ORB\_SLAM3 so it is easily usable with the rest of Viam's ecosystem.
+This repo wraps [ORB_SLAM3](https://github.com/UZ-SLAMLab/ORB_SLAM3) as a [modular resource](https://docs.viam.com/program/extend/modular-resources/) so it is easily usable with the rest of Viam's ecosystem. ORB_SLAM3 is a SLAM system for feature-based mapping using monocular, rgbd, and stereo camera setups. 
 
 ## Getting started
+
+Install viam-orb-slam3:
+
+* Linux aarch64:
+    ```bash
+    sudo curl -o /usr/local/bin/orb_grpc_server http://packages.viam.com/apps/slam-servers/orb_grpc_server-stable-aarch64.AppImage
+    sudo chmod a+rx /usr/local/bin/orb_grpc_server
+    ```
+ * Linux x86_64:
+    ```bash
+    sudo curl -o /usr/local/bin/orb_grpc_server http://packages.viam.com/apps/slam-servers/orb_grpc_server-stable-x86_64.AppImage
+    sudo chmod a+rx /usr/local/bin/orb_grpc_server
+    ```
+
+For next steps, see the [Run ORB-SLAM3 on your Robot with a Webcam Tutorial](https://docs.viam.com/services/slam/run-slam-webcam/).
+
+## Development
 
 ### Download 
 ```bash
@@ -23,21 +36,21 @@ If you happened to use `git clone` only, you won't see the `ORB_SLAM3` folder an
 
 `git submodule update --init`
 
-### Setup
-
-To setup the gRPC files, run:
+### Setup, build, and run the binary
 
 ```bash
+# Setup the gRPC files
 make bufinstall buf 
-```
-
-#### Automatic Dependency Installation (x64, arm64, or macOS)
-To automatically install dependencies, use the target 
-```bash
+# Install dependencies
 make setup
+# Build & install the binary
+make build
+sudo cp ./viam-orb-slam3/bin/orb_grpc_server /usr/local/bin
+# Run the binary
+orb_grpc_server
 ```
 
-#### Manual Dependency Install (x64 or arm64)
+#### Alternative: Manual Dependency Install (x64 or arm64)
 ```bash
 # Install & build Pangolin (includes eigen)
 git clone --recursive https://github.com/stevenlovegrove/Pangolin.git
@@ -47,45 +60,15 @@ mkdir build && cd build
 cmake ..
 make -j4 
 sudo make install
-```
-
-```bash
 # Install openCV
 sudo apt install libopencv-dev
-```
-
-```bash
 # Install Eigen3
 sudo apt install libeigen3-dev
-```
-
-```bash
 # Other dependencies
 sudo apt install libssl-dev 
 sudo apt-get install libboost-all-dev
 ```
 
-### Building
-Then to build:
-
-```bash
-make build
-```
-
-### Installing & Running
-
-Currently, you can install and run this locally with
-```bash
-sudo cp ./viam-orb-slam3/bin/orb_grpc_server /usr/local/bin
-```
-```bash
-orb_grpc_server
-```
-However in the future you will run this via the module system
-
-
-
-## Development
 ### Linting
 
 ```bash
