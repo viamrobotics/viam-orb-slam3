@@ -1,4 +1,6 @@
 BUILD_CHANNEL?=local
+TOOL_BIN = bin/gotools/$(shell uname -s)-$(shell uname -m)
+PATH_WITH_TOOLS="`pwd`/$(TOOL_BIN):${PATH}"
 
 bufinstall:
 	sudo apt-get install -y protobuf-compiler-grpc libgrpc-dev libgrpc++-dev || brew install grpc openssl --quiet
@@ -23,15 +25,30 @@ clean:
 	rm -rf viam-orb-slam3/ORB_SLAM3/Thirdparty/Sophus/build
 	rm -rf viam-orb-slam3/bin
 
-format-setup:
+format-setup-orb:
 	sudo apt-get install -y clang-format
 
-format:
+format-setup-go:
+	GOBIN=`pwd`/$(TOOL_BIN) go install \
+		github.com/edaniels/golinters/cmd/combined \
+		github.com/golangci/golangci-lint/cmd/golangci-lint \
+		github.com/rhysd/actionlint/cmd/actionlint
+
+format-setup: format-setup-orb format-setup-go
+
+format-go:
+	go vet -vettool=$(TOOL_BIN)/combined ./...
+	GOGC=50 $(TOOL_BIN)/golangci-lint run -v --fix --config=./etc/golangci.yaml
+	PATH=$(PATH_WITH_TOOLS) actionlint
+
+format-orb:
 	find . -type f -not -path \
 		-and ! -path '*viam-orb-slam3/ORB_SLAM3*' \
 		-and ! -path '*api*' \
 		-and \( -iname '*.h' -o -iname '*.cpp' -o -iname '*.cc' \) \
 		| xargs clang-format -i --style="{BasedOnStyle: Google, IndentWidth: 4}"
+
+format: format-go format-orb
 
 setup:
 ifeq ("Darwin", "$(shell uname -s)")
@@ -43,11 +60,15 @@ endif
 build:
 	cd viam-orb-slam3 && ./scripts/build_orbslam.sh
 
-test:
+test-go:
+	go test -race ./...
+
+test-orb:
 	cd viam-orb-slam3 && ./scripts/test_orbslam.sh
 
-all: bufinstall buf setup build test
+test: test-orb test-go
 
+all: bufinstall buf setup build test
 
 appimage: build
 	cd etc/packaging/appimages && BUILD_CHANNEL=${BUILD_CHANNEL} appimage-builder --recipe orb_grpc_server-`uname -m`.yml
