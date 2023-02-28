@@ -3,7 +3,6 @@ name: Test
 on:
   workflow_dispatch:
   workflow_call:
-    secrets:
 
 env:
   GOOGLE_APPLICATION_CREDENTIALS_FILENAME: "google-credentials.json"
