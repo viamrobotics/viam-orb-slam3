@@ -17,3 +17,5 @@ on:
 jobs:
   test:
     uses: viamrobotics/viam-orb-slam3/.github/workflows/test.yml@workflowdev
+    secrets:
+      ARTIFACT_READ_ONLY_GCP_CREDENTIALS: ${{ secrets.ARTIFACT_READ_ONLY_GCP_CREDENTIALS }}

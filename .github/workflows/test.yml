@@ -3,6 +3,9 @@ name: Test
 on:
   workflow_dispatch:
   workflow_call:
+    secrets:
+      ARTIFACT_READ_ONLY_GCP_CREDENTIALS:
+        required: true
 
 env:
   GOOGLE_APPLICATION_CREDENTIALS_FILENAME: "google-credentials.json"
