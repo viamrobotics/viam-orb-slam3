@@ -12,8 +12,8 @@ env:
   GOOGLE_APPLICATION_CREDENTIALS_FILENAME: "google-credentials.json"
 
 jobs:
-  format:
-    name: Format
+  lint:
+    name: Lint
     runs-on: [x64, qemu-host]
     container:
       image: ghcr.io/viamrobotics/canon:amd64-cache
@@ -25,16 +25,16 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Verify no uncommitted changes from make format
+    - name: Verify no uncommitted changes from make lint
       run: |
         git init
         git add .
         chown -R testbot .
-        sudo -u testbot bash -lc 'make format-setup format'
+        sudo -u testbot bash -lc 'make lint-setup lint'
         GEN_DIFF=$(git status -s)
 
         if [ -n "$GEN_DIFF" ]; then
-            echo '"make format" resulted in changes not in git' 1>&2
+            echo '"make lint" resulted in changes not in git' 1>&2
             git status
             exit 1
         fi
