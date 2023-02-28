@@ -25,30 +25,30 @@ clean:
 	rm -rf viam-orb-slam3/ORB_SLAM3/Thirdparty/Sophus/build
 	rm -rf viam-orb-slam3/bin
 
-format-setup-orb:
+lint-setup-orb:
 	sudo apt-get install -y clang-format
 
-format-setup-go:
+lint-setup-go:
 	GOBIN=`pwd`/$(TOOL_BIN) go install \
 		github.com/edaniels/golinters/cmd/combined \
 		github.com/golangci/golangci-lint/cmd/golangci-lint \
 		github.com/rhysd/actionlint/cmd/actionlint
 
-format-setup: format-setup-orb format-setup-go
+lint-setup: lint-setup-orb lint-setup-go
 
-format-go:
+lint-go:
 	go vet -vettool=$(TOOL_BIN)/combined ./...
 	GOGC=50 $(TOOL_BIN)/golangci-lint run -v --fix --config=./etc/golangci.yaml
 	PATH=$(PATH_WITH_TOOLS) actionlint
 
-format-orb:
+lint-orb:
 	find . -type f -not -path \
 		-and ! -path '*viam-orb-slam3/ORB_SLAM3*' \
 		-and ! -path '*api*' \
 		-and \( -iname '*.h' -o -iname '*.cpp' -o -iname '*.cc' \) \
 		| xargs clang-format -i --style="{BasedOnStyle: Google, IndentWidth: 4}"
 
-format: format-go format-orb
+lint: lint-go lint-orb
 
 setup:
 ifeq ("Darwin", "$(shell uname -s)")
