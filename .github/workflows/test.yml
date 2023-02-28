@@ -8,7 +8,6 @@ on:
         required: true
 
 env:
-  GOPRIVATE: "github.com/viamrobotics/*,go.viam.com/*"
   GOOGLE_APPLICATION_CREDENTIALS_FILENAME: "google-credentials.json"
 
 jobs:
@@ -30,7 +29,7 @@ jobs:
         git init
         git add .
         chown -R testbot .
-        sudo -u testbot bash -lc 'make lint-setup lint'
+        sudo -u testbot bash -lc 'make lint'
         GEN_DIFF=$(git status -s)
 
         if [ -n "$GEN_DIFF" ]; then
@@ -63,7 +62,7 @@ jobs:
         submodules: recursive
         path: viam-orb-slam3
 
-    - name: make bufinstall buf
+    - name: make bufinstall buf setup
       uses: nick-fields/retry@v2
       with:
         timeout_minutes: 5
@@ -72,11 +71,7 @@ jobs:
         shell: bash
         command: |
           chown -R testbot .
-          sudo -u testbot bash -lc 'cd viam-orb-slam3 && make bufinstall buf'
-
-    - name: make setup
-      run: |
-        sudo -u testbot bash -lc 'cd viam-orb-slam3 && make setup'
+          sudo -u testbot bash -lc 'cd viam-orb-slam3 && make bufinstall buf setup'
 
     - name: make build
       run: |
@@ -94,15 +89,15 @@ jobs:
     - name: Check out code in rdk directory
       if: matrix.platform == 'linux/amd64'
       uses: actions/checkout@v3
+      # Pulls main/HEAD from rdk to ensure no accidental regressions
       with:
-        repository: viamrobotics/rdk
+        repository: viamrobotics/rdk 
         path: rdk
 
     - name: Create GCP Credential File from secret
       if: matrix.platform == 'linux/amd64'
       run: |
         GOOGLE_APPLICATION_CREDENTIALS=`pwd`/${GOOGLE_APPLICATION_CREDENTIALS_FILENAME}
-        echo "${{ secrets.ARTIFACT_READ_ONLY_GCP_CREDENTIALS }}" >> ${GOOGLE_APPLICATION_CREDENTIALS}
         echo "GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}" >> $GITHUB_ENV
 
     - name: Run rdk orbslam integration tests
