@@ -11,7 +11,7 @@ on:
       ARTIFACT_READ_ONLY_GCP_CREDENTIALS:
         required: true
   push:
-    branches: main
+    branches: workflowdev
     paths-ignore:
       - 'README.md'
 
@@ -113,7 +113,7 @@ jobs:
       with:
         headers: "cache-control: no-cache"
         path: 'viam-orb-slam3/etc/packaging/appimages/deploy/'
-        destination: 'packages.viam.com/apps/slam-servers/'
+        destination: 'packages.viam.com/apps/slam-servers-dev/'
         glob: '*'
         parent: false
         gzip: false
