@@ -57,7 +57,7 @@ linters-settings:
     sections:
       - standard
       - default
-      - prefix(go.viam.com/slam)
+      - prefix(github.com/viamrobotics/viam-orb-slam3)
   gofumpt:
     lang-version: "1.19"
     extra-rules: true

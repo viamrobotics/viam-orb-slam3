@@ -25,7 +25,7 @@ clean:
 	rm -rf viam-orb-slam3/ORB_SLAM3/Thirdparty/Sophus/build
 	rm -rf viam-orb-slam3/bin
 
-lint-setup-orb:
+lint-setup-cpp:
 	sudo apt-get install -y clang-format
 
 lint-setup-go:
@@ -34,21 +34,21 @@ lint-setup-go:
 		github.com/golangci/golangci-lint/cmd/golangci-lint \
 		github.com/rhysd/actionlint/cmd/actionlint
 
-lint-setup: lint-setup-orb lint-setup-go
+lint-setup: lint-setup-cpp lint-setup-go
 
-lint-go:
+lint-go: lint-setup-go
 	go vet -vettool=$(TOOL_BIN)/combined ./...
 	GOGC=50 $(TOOL_BIN)/golangci-lint run -v --fix --config=./etc/golangci.yaml
 	PATH=$(PATH_WITH_TOOLS) actionlint
 
-lint-orb:
+lint-cpp: lint-setup-cpp
 	find . -type f -not -path \
 		-and ! -path '*viam-orb-slam3/ORB_SLAM3*' \
 		-and ! -path '*api*' \
 		-and \( -iname '*.h' -o -iname '*.cpp' -o -iname '*.cc' \) \
 		| xargs clang-format -i --style="{BasedOnStyle: Google, IndentWidth: 4}"
 
-lint: lint-go lint-orb
+lint: lint-go lint-cpp
 
 setup:
 ifeq ("Darwin", "$(shell uname -s)")
@@ -60,13 +60,13 @@ endif
 build:
 	cd viam-orb-slam3 && ./scripts/build_orbslam.sh
 
-test-go:
+test-module-wrapper:
 	go test -race ./...
 
-test-orb:
+test-core:
 	cd viam-orb-slam3 && ./scripts/test_orbslam.sh
 
-test: test-orb test-go
+test: test-core test-module-wrapper
 
 all: bufinstall buf setup build test
 
