@@ -26,7 +26,11 @@ clean:
 	rm -rf viam-orb-slam3/bin
 
 lint-setup-cpp:
+ifeq ("Darwin", "$(shell uname -s)")
+	brew install clang-format
+else
 	sudo apt-get install -y clang-format
+endif
 
 lint-setup-go:
 	GOBIN=`pwd`/$(TOOL_BIN) go install \
@@ -67,6 +71,9 @@ test-core:
 	cd viam-orb-slam3 && ./scripts/test_orbslam.sh
 
 test: test-core test-module-wrapper
+
+install:
+	sudo cp viam-orb-slam3/bin/orb_grpc_server /usr/local/bin/orb_grpc_server
 
 all: bufinstall buf setup build test
 
