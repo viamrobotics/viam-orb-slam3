@@ -21,4 +21,3 @@ jobs:
     uses: viamrobotics/viam-orb-slam3/.github/workflows/appimage.yml@workflowdev
     secrets:
       GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-      REPO_READ_TOKEN: ${{ secrets.REPO_READ_TOKEN }}
