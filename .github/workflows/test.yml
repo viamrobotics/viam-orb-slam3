@@ -13,7 +13,7 @@ jobs:
       options: --platform linux/amd64
     timeout-minutes: 10
     steps:
-    - name: Check out code in slam directory
+    - name: Check out code in viam-orb-slam3 directory
       uses: actions/checkout@v3
       with:
         submodules: recursive
