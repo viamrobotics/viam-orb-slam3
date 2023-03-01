@@ -3,12 +3,6 @@ name: Test
 on:
   workflow_dispatch:
   workflow_call:
-    secrets:
-      ARTIFACT_READ_ONLY_GCP_CREDENTIALS:
-        required: true
-
-env:
-  GOOGLE_APPLICATION_CREDENTIALS_FILENAME: "google-credentials.json"
 
 jobs:
   lint:
@@ -94,13 +88,7 @@ jobs:
         repository: viamrobotics/rdk 
         path: rdk
 
-    - name: Create GCP Credential File from secret
-      if: matrix.platform == 'linux/amd64'
-      run: |
-        GOOGLE_APPLICATION_CREDENTIALS=`pwd`/${GOOGLE_APPLICATION_CREDENTIALS_FILENAME}
-        echo "GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}" >> $GITHUB_ENV
-
     - name: Run rdk orbslam integration tests
       if: matrix.platform == 'linux/amd64'
       run: |
-        sudo --preserve-env=GOOGLE_APPLICATION_CREDENTIALS -u testbot bash -lc 'cd rdk/services/slam/builtin && sudo go test -v -run TestOrbslamIntegration'
+        sudo -u testbot bash -lc 'cd rdk/services/slam/builtin && sudo go test -v -run TestOrbslamIntegration'
