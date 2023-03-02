@@ -61,7 +61,7 @@ lint-cpp: lint-setup-cpp
 		-and \( -iname '*.h' -o -iname '*.cpp' -o -iname '*.cc' \) \
 		| xargs clang-format -i --style="{BasedOnStyle: Google, IndentWidth: 4}"
 
-lint: | ensure-submodule-initialized lint-go lint-cpp
+lint: ensure-submodule-initialized lint-go lint-cpp
 
 setup: ensure-submodule-initialized
 ifeq ("Darwin", "$(shell uname -s)")
