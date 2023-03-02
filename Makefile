@@ -25,6 +25,14 @@ clean:
 	rm -rf viam-orb-slam3/ORB_SLAM3/Thirdparty/Sophus/build
 	rm -rf viam-orb-slam3/bin
 
+ensure-submodule-initialized:
+	@if [ ! -d "viam-orb-slam3/ORB_SLAM3/src" ]; then \
+		echo "Submodule was not initialized. Initializing..."; \
+		git submodule update --init; \
+	else \
+		echo "Submodule found successfully"; \
+	fi 
+
 lint-setup-cpp:
 ifeq ("Darwin", "$(shell uname -s)")
 	brew install clang-format
@@ -52,9 +60,9 @@ lint-cpp: lint-setup-cpp
 		-and \( -iname '*.h' -o -iname '*.cpp' -o -iname '*.cc' \) \
 		| xargs clang-format -i --style="{BasedOnStyle: Google, IndentWidth: 4}"
 
-lint: lint-go lint-cpp
+lint: | ensure-submodule-initialized lint-go lint-cpp
 
-setup:
+setup: ensure-submodule-initialized
 ifeq ("Darwin", "$(shell uname -s)")
 	cd viam-orb-slam3 && ./scripts/setup_orbslam_macos.sh
 else
@@ -74,8 +82,6 @@ test: test-core test-module-wrapper
 
 install:
 	sudo cp viam-orb-slam3/bin/orb_grpc_server /usr/local/bin/orb_grpc_server
-
-all: bufinstall buf setup build test
 
 appimage: build
 	cd etc/packaging/appimages && BUILD_CHANNEL=${BUILD_CHANNEL} appimage-builder --recipe orb_grpc_server-`uname -m`.yml
