@@ -42,7 +42,6 @@ static const int maximumGRPCByteChunkSize = 64 * 1024;
 
 class SLAMServiceImpl final : public SLAMService::Service {
    public:
-
     // For a given GetPositionNewRequest
     // Returns a GetPositionNewResponse containing
     // the current pose and component_reference of the SLAM
