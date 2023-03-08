@@ -42,9 +42,6 @@ static const int maximumGRPCByteChunkSize = 64 * 1024;
 
 class SLAMServiceImpl final : public SLAMService::Service {
    public:
-    ::grpc::Status GetPosition(ServerContext *context,
-                               const GetPositionRequest *request,
-                               GetPositionResponse *response) override;
 
     // For a given GetPositionNewRequest
     // Returns a GetPositionNewResponse containing
@@ -53,25 +50,6 @@ class SLAMServiceImpl final : public SLAMService::Service {
     ::grpc::Status GetPositionNew(ServerContext *context,
                                   const GetPositionNewRequest *request,
                                   GetPositionNewResponse *response) override;
-
-    ::grpc::Status GetMap(ServerContext *context, const GetMapRequest *request,
-                          GetMapResponse *response) override;
-
-    // For a given GetPointCloudMapRequest
-    // Returns a GetPointCloudMapResponse containing a sparse
-    // slam map as Binary PCD. The z-axis represents the direction the camera is
-    // facing at the origin of the map
-    ::grpc::Status GetPointCloudMap(
-        ServerContext *context, const GetPointCloudMapRequest *request,
-        GetPointCloudMapResponse *response) override;
-
-    // For a given GetInternalStateRequest
-    // Returns a GetInternalStateResponse containing
-    // current internal state of the map represented as an ORB-SLAM Atlas(.osa)
-    // file in chunks of size maximumGRPCByteChunkSize
-    ::grpc::Status GetInternalState(
-        ServerContext *context, const GetInternalStateRequest *request,
-        GetInternalStateResponse *response) override;
 
     // GetPointCloudMap returns a stream containing a sparse
     // slam map as Binary PCD. In chunks of size maximumGRPCByteChunkSize.
