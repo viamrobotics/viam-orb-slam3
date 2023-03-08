@@ -13,20 +13,12 @@
 
 using grpc::ServerContext;
 using grpc::ServerWriter;
-using viam::service::slam::v1::GetInternalStateRequest;
-using viam::service::slam::v1::GetInternalStateResponse;
 using viam::service::slam::v1::GetInternalStateStreamRequest;
 using viam::service::slam::v1::GetInternalStateStreamResponse;
-using viam::service::slam::v1::GetMapRequest;
-using viam::service::slam::v1::GetMapResponse;
-using viam::service::slam::v1::GetPointCloudMapRequest;
-using viam::service::slam::v1::GetPointCloudMapResponse;
 using viam::service::slam::v1::GetPointCloudMapStreamRequest;
 using viam::service::slam::v1::GetPointCloudMapStreamResponse;
 using viam::service::slam::v1::GetPositionNewRequest;
 using viam::service::slam::v1::GetPositionNewResponse;
-using viam::service::slam::v1::GetPositionRequest;
-using viam::service::slam::v1::GetPositionResponse;
 using viam::service::slam::v1::SLAMService;
 using SlamPtr = std::unique_ptr<ORB_SLAM3::System>;
 
