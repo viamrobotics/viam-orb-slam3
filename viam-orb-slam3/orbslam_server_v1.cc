@@ -357,37 +357,6 @@ void SLAMServiceImpl::UpdateMapAndPose(ORB_SLAM3::System *SLAM,
     return;
 }
 
-// Creates a simple map containing a 2x4x8 rectangular prism with the robot
-// in the center, for testing GetMap and GetPosition.
-void SLAMServiceImpl::ProcessDataForTesting(ORB_SLAM3::System *SLAM) {
-    std::vector<Eigen::Vector3f> worldPos{{0, 0, 0}, {0, 0, 8}, {0, 4, 0},
-                                          {0, 4, 8}, {2, 0, 0}, {2, 0, 8},
-                                          {2, 4, 0}, {2, 4, 8}};
-    std::vector<ORB_SLAM3::MapPoint> mapPoints(8);
-    for (size_t i = 0; i < worldPos.size(); i++) {
-        mapPoints[i].SetWorldPos(worldPos[i]);
-    }
-
-    Sophus::SO3f so3;
-    Eigen::Vector3f translation{1, 2, 4};
-
-    {
-        std::lock_guard<std::mutex> lock(slam_mutex);
-        currMapPoints.clear();
-        for (auto &&p : mapPoints) {
-            currMapPoints.push_back(&p);
-        }
-        poseGrpc = Sophus::SE3f(so3, translation);
-    }
-    BOOST_LOG_TRIVIAL(info) << "Finished creating map for testing";
-
-    // Continue to serve requests.
-    while (b_continue_session) {
-        this_thread::sleep_for(
-            chrono::microseconds(checkForShutdownIntervalMicroseconds));
-    }
-}
-
 void SLAMServiceImpl::StartSaveAtlasAsOsa(ORB_SLAM3::System *SLAM) {
     if (map_rate_sec == chrono::seconds(0)) {
         return;
