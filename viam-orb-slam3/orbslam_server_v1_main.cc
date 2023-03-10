@@ -32,6 +32,9 @@ int main(int argc, char **argv) {
     sigaction(SIGTERM, &sigHandler, NULL);
     sigaction(SIGINT, &sigHandler, NULL);
 
+    static_assert((sizeof(float) == 4) && (CHAR_BIT == 8) && (sizeof(int) == 4),
+                  "32 bit float & 8 bit char & 32 bit int is assumed");
+
     viam::SLAMServiceImpl slamService;
     slamService.SetSlam(nullptr);
 
