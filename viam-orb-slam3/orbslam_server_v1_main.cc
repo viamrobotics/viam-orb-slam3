@@ -185,6 +185,7 @@ int main(int argc, char **argv) {
         slamService.ProcessDataOnline(SLAM.get());
         slamService.StopSaveAtlasAsOsa();
     }
+    // slamService.ProcessDataForTesting(SLAM.get());
 
     slamService.SetSlam(nullptr);
     SLAM->Shutdown();
