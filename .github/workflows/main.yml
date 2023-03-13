@@ -38,4 +38,3 @@ jobs:
             slack_webhook_url: ${{secrets.SLACK_WEBHOOK_URL}}
             channel: '#team-slam-dev'
             name: 'Workflow Status'
-            
