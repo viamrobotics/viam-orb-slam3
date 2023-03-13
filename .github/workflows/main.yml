@@ -18,7 +18,7 @@ on:
 
 jobs:
   appimage:
-    uses: viamrobotics/viam-orb-slam3/.github/workflows/appimage.yml@main
+    uses: viamrobotics/viam-orb-slam3/.github/workflows/appimage.yml@alerts
     secrets:
       GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
 
