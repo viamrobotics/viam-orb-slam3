@@ -25,8 +25,8 @@ jobs:
   slack-workflow-status:
       if: ${{ failure() }}
       name: Post Workflow Status To Slack
-      # needs:
-      #   - appimage
+      needs:
+        - appimage
       runs-on: ubuntu-latest
       permissions:
         actions: 'read'
