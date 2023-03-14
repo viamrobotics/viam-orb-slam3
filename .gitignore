@@ -10,9 +10,15 @@
 *.DS_Store
 *.swp
 
+# artifact data
+.artifact/cache
+.artifact/data
+
 # generate folders
 grpc/
 bin/
 
 # code editor settings
 .vscode
+
+
