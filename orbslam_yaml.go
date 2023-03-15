@@ -16,6 +16,7 @@ import (
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/utils"
 	"gopkg.in/yaml.v2"
+    dataprocess "go.viam.com/slam/dataprocess"
 )
 
 const (
@@ -156,7 +157,7 @@ func (slamSvc *builtIn) orbGenYAML(ctx context.Context, cam camera.Camera) error
 		slamSvc.logger.Debugf("Error occurred while parsing %s for maps, building map from scratch", slamSvc.dataDirectory)
 	}
 	if loadMapTimeStamp == "" {
-		loadMapTimeStamp = time.Now().UTC().Format(slamTimeFormat)
+		loadMapTimeStamp = time.Now().UTC().Format(dataprocess.SlamTimeFormat)
 	} else {
 		orbslam.LoadMapLoc = "\"" + loadMapName + "\""
 	}
@@ -231,7 +232,7 @@ func (slamSvc *builtIn) checkMaps() (string, string, error) {
 			// check if the file uses our format and grab timestamp if it does
 			timestampLoc := strings.Index(entry.Name(), "_data_") + len("_data_")
 			if timestampLoc != -1+len("_data_") {
-				timestamp, err := time.Parse(slamTimeFormat, entry.Name()[timestampLoc:strings.Index(entry.Name(), mapExt)])
+				timestamp, err := time.Parse(dataprocess.SlamTimeFormat, entry.Name()[timestampLoc:strings.Index(entry.Name(), mapExt)])
 				if err != nil {
 					slamSvc.logger.Debugf("Unable to parse map %s, %v", path, err)
 					return nil
@@ -253,5 +254,5 @@ func (slamSvc *builtIn) checkMaps() (string, string, error) {
 		return "", "", nil
 	}
 	slamSvc.logger.Infof("Previous map found, using %v", mapPath)
-	return mapTimestamp.UTC().Format(slamTimeFormat), mapPath, nil
+	return mapTimestamp.UTC().Format(dataprocess.SlamTimeFormat), mapPath, nil
 }
