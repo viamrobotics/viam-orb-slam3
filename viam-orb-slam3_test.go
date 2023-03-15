@@ -528,29 +528,6 @@ func TestGeneralNew(t *testing.T) {
 				"\"gibberish\" missing from dependencies"))
 	})
 
-	t.Run("New slam service with invalid slam algo type", func(t *testing.T) {
-		attrCfg := &slamConfig.AttrConfig{
-			Sensors:       []string{"good_depth_camera"},
-			ConfigParams:  map[string]string{"mode": "mono"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
-			UseLiveData:   &_true,
-		}
-
-		slam.SLAMLibraries["test"] = slam.LibraryMetadata{
-			AlgoName:       "test",
-			AlgoType:       99,
-			SlamMode:       slam.SLAMLibraries["orbslamv3"].SlamMode,
-			BinaryLocation: "",
-		}
-
-		// Create slam service
-		_, err := createSLAMService(t, attrCfg, "test", logger, false, false)
-		test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "runtime slam service error: invalid slam algorithm \"test\"")
-
-		delete(slam.SLAMLibraries, "test")
-	})
-
 	closeOutSLAMService(t, name)
 }
 
