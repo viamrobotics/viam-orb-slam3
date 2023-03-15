@@ -1,4 +1,4 @@
-// This is an Experimental package
+// Package viamorbslam3 implements simultaneous localization and mapping
 package viamorbslam3
 
 import (
@@ -14,6 +14,7 @@ import (
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/utils"
+	dataprocess "go.viam.com/slam/dataprocess"
 	"gopkg.in/yaml.v2"
 )
 

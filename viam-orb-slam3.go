@@ -192,7 +192,11 @@ type builtIn struct {
 // configureCameras will check the config to see if any cameras are desired and if so, grab the cameras from
 // the robot. We assume there are at most two cameras and that we only require intrinsics from the first one.
 // Returns the name of the first camera.
-func configureCameras(ctx context.Context, svcConfig *slamConfig.AttrConfig, deps registry.Dependencies, logger golog.Logger) (string, []camera.Camera, error) {
+func configureCameras(ctx context.Context,
+	svcConfig *slamConfig.AttrConfig,
+	deps registry.Dependencies,
+	logger golog.Logger,
+) (string, []camera.Camera, error) {
 	if len(svcConfig.Sensors) > 0 {
 		logger.Debug("Running in live mode")
 		cams := make([]camera.Camera, 0, len(svcConfig.Sensors))
@@ -230,7 +234,8 @@ func configureCameras(ctx context.Context, svcConfig *slamConfig.AttrConfig, dep
 
 			brownConrady, ok := props.DistortionParams.(*transform.BrownConrady)
 			if !ok {
-				return "", nil, errors.New("error getting distortion_parameters for slam service, only BrownConrady distortion parameters are supported")
+				return "", nil, errors.New("error getting distortion_parameters for slam service, " +
+					"only BrownConrady distortion parameters are supported")
 			}
 			if err := brownConrady.CheckValid(); err != nil {
 				return "", nil, errors.Wrapf(err, "error validating distortion_parameters for slam service")
@@ -284,6 +289,7 @@ func (slamSvc *builtIn) Position(ctx context.Context, name string, extra map[str
 		pInFrame = referenceframe.NewPoseInFrame(resp.GetComponentReference(), spatialmath.NewPoseFromProtobuf(resp.GetPose()))
 		returnedExt = resp.Extra.AsMap()
 	} else {
+		//nolint:staticcheck
 		req := &pb.GetPositionRequest{Name: name, Extra: ext}
 
 		resp, err := slamSvc.clientAlgo.GetPosition(ctx, req)
@@ -369,6 +375,7 @@ func (slamSvc *builtIn) GetMap(
 	if slamSvc.dev {
 		slamSvc.logger.Debug("IN DEV MODE (map request)")
 
+		//nolint:staticcheck
 		reqPCMap := &pb.GetPointCloudMapRequest{
 			Name: name,
 		}
@@ -377,6 +384,7 @@ func (slamSvc *builtIn) GetMap(
 			return "", nil, nil, errors.New("non-pcd return type is impossible in while in dev mode")
 		}
 
+		//nolint:staticcheck
 		resp, err := slamSvc.clientAlgo.GetPointCloudMap(ctx, reqPCMap)
 		if err != nil {
 			return "", imData, vObj, errors.Errorf("error getting SLAM map (%v) : %v", mimeType, err)
@@ -397,6 +405,7 @@ func (slamSvc *builtIn) GetMap(
 
 		mimeType = rdkutils.MimeTypePCD
 	} else {
+		//nolint:staticcheck
 		req := &pb.GetMapRequest{
 			Name:               name,
 			MimeType:           mimeType,
@@ -405,6 +414,7 @@ func (slamSvc *builtIn) GetMap(
 			Extra:              ext,
 		}
 
+		//nolint:staticcheck
 		resp, err := slamSvc.clientAlgo.GetMap(ctx, req)
 		if err != nil {
 			return "", imData, vObj, errors.Errorf("error getting SLAM map (%v) : %v", mimeType, err)
@@ -443,8 +453,10 @@ func (slamSvc *builtIn) GetInternalState(ctx context.Context, name string) ([]by
 	ctx, span := trace.StartSpan(ctx, "slam::builtIn::GetInternalState")
 	defer span.End()
 
+	//nolint:staticcheck
 	req := &pb.GetInternalStateRequest{Name: name}
 
+	//nolint:staticcheck
 	resp, err := slamSvc.clientAlgo.GetInternalState(ctx, req)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting the internal state from the SLAM client")
@@ -473,7 +485,12 @@ func (slamSvc *builtIn) GetInternalStateStream(ctx context.Context, name string)
 }
 
 // NewBuiltIn returns a new slam service for the given robot.
-func NewBuiltIn(ctx context.Context, deps registry.Dependencies, config config.Service, logger golog.Logger, bufferSLAMProcessLogs bool) (slam.Service, error) {
+func NewBuiltIn(ctx context.Context,
+	deps registry.Dependencies,
+	config config.Service,
+	logger golog.Logger,
+	bufferSLAMProcessLogs bool,
+) (slam.Service, error) {
 	ctx, span := trace.StartSpan(ctx, "slam::slamService::New")
 	defer span.End()
 
@@ -499,7 +516,9 @@ func NewBuiltIn(ctx context.Context, deps registry.Dependencies, config config.S
 			modelName, svcConfig.ConfigParams["mode"])
 	}
 
-	slamConfig.SetupDirectories(svcConfig.DataDirectory, logger)
+	if err = slamConfig.SetupDirectories(svcConfig.DataDirectory, logger); err != nil {
+		return nil, errors.Errorf("unable to setup working directories: %v", err)
+	}
 
 	if slamMode == slam.Rgbd || slamMode == slam.Mono {
 		var directoryNames []string
@@ -519,7 +538,13 @@ func NewBuiltIn(ctx context.Context, deps registry.Dependencies, config config.S
 		}
 	}
 
-	port, dataRateMsec, mapRateSec, useLiveData, deleteProcessedData, err := slamConfig.GetOptionalParameters(svcConfig, localhost0, defaultDataRateMsec, defaultMapRateSec, logger)
+	port, dataRateMsec, mapRateSec, useLiveData, deleteProcessedData, err := slamConfig.GetOptionalParameters(
+		svcConfig,
+		localhost0,
+		defaultDataRateMsec,
+		defaultMapRateSec,
+		logger,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -584,10 +609,14 @@ func (slamSvc *builtIn) Close() error {
 	slamSvc.cancelFunc()
 	if slamSvc.bufferSLAMProcessLogs {
 		if slamSvc.slamProcessLogReader != nil {
-			slamSvc.slamProcessLogReader.Close()
+			if err := slamSvc.slamProcessLogReader.Close(); err != nil {
+				return errors.Wrap(err, "error occurred during closeout of slam log reader")
+			}
 		}
 		if slamSvc.slamProcessLogWriter != nil {
-			slamSvc.slamProcessLogWriter.Close()
+			if err := slamSvc.slamProcessLogWriter.Close(); err != nil {
+				return errors.Wrap(err, "error occurred during closeout of slam log writer")
+			}
 		}
 	}
 	if err := slamSvc.StopSLAMProcess(); err != nil {
@@ -726,10 +755,16 @@ func (slamSvc *builtIn) StartSLAMProcess(ctx context.Context) error {
 		defer timeoutCancel()
 
 		if !slamSvc.bufferSLAMProcessLogs {
-			//nolint:errcheck
-			defer logReader.Close()
-			//nolint:errcheck
-			defer logWriter.Close()
+			defer func(logger golog.Logger) {
+				if err := logReader.Close(); err != nil {
+					logger.Debugw("Closing logReader returned an error", "error", err)
+				}
+			}(slamSvc.logger)
+			defer func(logger golog.Logger) {
+				if err := logWriter.Close(); err != nil {
+					logger.Debugw("Closing logReader returned an error", "error", err)
+				}
+			}(slamSvc.logger)
 		}
 
 		for {
@@ -860,6 +895,8 @@ func (slamSvc *builtIn) getAndSaveDataSparse(
 		return filenames, nil
 	case slam.Dim2d:
 		return nil, errors.Errorf("bad slamMode %v specified for this algorithm", slamSvc.slamMode)
+	case slam.Dim3d:
+		return nil, errors.New("Dim3d is not implemented")
 	default:
 		return nil, errors.Errorf("invalid slamMode %v specified", slamSvc.slamMode)
 	}
@@ -928,6 +965,8 @@ func (slamSvc *builtIn) getAndSaveDataDense(ctx context.Context, cams []camera.C
 		fileType = ".pcd"
 	case slam.Rgbd, slam.Mono:
 		return "", errors.Errorf("bad slamMode %v specified for this algorithm", slamSvc.slamMode)
+	case slam.Dim3d:
+		return "", errors.New("Dim3d is not implemented")
 	}
 	filenames, err := createTimestampFilenames(slamSvc.dataDirectory, slamSvc.primarySensorName, fileType, slamSvc.slamMode)
 	if err != nil {
@@ -956,6 +995,8 @@ func createTimestampFilenames(dataDirectory, primarySensorName, fileType string,
 		rgbFilename := dataprocess.CreateTimestampFilename(rbgDataDir, primarySensorName, fileType, timeStamp)
 		depthFilename := dataprocess.CreateTimestampFilename(depthDataDir, primarySensorName, fileType, timeStamp)
 		return []string{rgbFilename, depthFilename}, nil
+	case slam.Dim3d:
+		return nil, errors.New("Dim3d is not implemented")
 	default:
 		return nil, errors.Errorf("Invalid slam mode: %v", slamMode)
 	}
