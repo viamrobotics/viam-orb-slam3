@@ -21,6 +21,7 @@ import (
 	"github.com/edaniels/gostream"
 	"github.com/golang/geo/r3"
 	"github.com/pkg/errors"
+	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/config"
 	"go.viam.com/rdk/pointcloud"
@@ -39,24 +40,23 @@ import (
 	"go.viam.com/utils"
 	"go.viam.com/utils/artifact"
 	"google.golang.org/grpc"
-    viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 
 	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 
 const (
-	validDataRateMS            = 200
-	dataBufferSize             = 4
+	validDataRateMS = 200
+	dataBufferSize  = 4
 )
 
 var (
-	orbslamIntCameraMutex                     sync.Mutex
-	orbslamIntCameraReleaseImagesChan         = make(chan int, 2)
-	orbslamIntWebcamReleaseImageChan          = make(chan int, 1)
-	orbslamIntSynchronizeCamerasChan          = make(chan int)
-	validMapRate                              = 200
-	_true                                     = true
-	_false                                    = false
+	orbslamIntCameraMutex             sync.Mutex
+	orbslamIntCameraReleaseImagesChan = make(chan int, 2)
+	orbslamIntWebcamReleaseImageChan  = make(chan int, 1)
+	orbslamIntSynchronizeCamerasChan  = make(chan int)
+	validMapRate                      = 200
+	_true                             = true
+	_false                            = false
 )
 
 func getNumOrbslamImages(mode slam.Mode) int {
@@ -70,20 +70,24 @@ func getNumOrbslamImages(mode slam.Mode) int {
 	}
 }
 
-func getFakeSlamLibraryMetadata(algorithm string) (slam.LibraryMetadata, error) {
-    library_entry, ok := slam.SLAMLibraries[algorithm];
-    if !ok {
-        return slam.LibraryMetadata{}, errors.Errorf("unable to create fake slam library metadata for: %v",algorithm)
-    }
-    return slam.LibraryMetadata{
-			AlgoName:       "fake_" + library_entry.AlgoName,
-			AlgoType:       library_entry.AlgoType,
-			SlamMode:       library_entry.SlamMode,
+func createFakeSLAMLibraries() {
+	for _, s := range slam.SLAMLibraries {
+		slam.SLAMLibraries["fake_"+s.AlgoName] = slam.LibraryMetadata{
+			AlgoName:       "fake_" + s.AlgoName,
+			AlgoType:       s.AlgoType,
+			SlamMode:       s.SlamMode,
 			BinaryLocation: "true",
-    }, nil
-
+		}
+	}
 }
 
+func deleteFakeSLAMLibraries() {
+	for k := range slam.SLAMLibraries {
+		if strings.Contains(k, "fake") {
+			delete(slam.SLAMLibraries, k)
+		}
+	}
+}
 
 func closeOutSLAMService(t *testing.T, name string) {
 	t.Helper()
@@ -92,6 +96,8 @@ func closeOutSLAMService(t *testing.T, name string) {
 		err := slamTesthelper.ResetFolder(name)
 		test.That(t, err, test.ShouldBeNil)
 	}
+
+	deleteFakeSLAMLibraries()
 }
 
 func setupTestGRPCServer(tb testing.TB) (*grpc.Server, int) {
@@ -174,7 +180,7 @@ func setupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 	for _, sensor := range attr.Sensors {
 		cam := &inject.Camera{}
 		switch sensor {
-        case "good_lidar":
+		case "good_lidar":
 			cam.NextPointCloudFunc = func(ctx context.Context) (pointcloud.PointCloud, error) {
 				return pointcloud.New(), nil
 			}
@@ -696,8 +702,8 @@ func TestORBSLAMNew(t *testing.T) {
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			transform.NewNoIntrinsicsError(fmt.Sprintf("Invalid size (%#v, %#v)", 0, 0)).Error())
 	})
-    t.Run("New orbslamv3 service with lidar without Next implementation", func(t *testing.T) {
-	    attrCfg := &slamConfig.AttrConfig{
+	t.Run("New orbslamv3 service with lidar without Next implementation", func(t *testing.T) {
+		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"good_lidar"},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,

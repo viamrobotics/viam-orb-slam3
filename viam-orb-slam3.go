@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/edaniels/golog"
-	"github.com/edaniels/gostream"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
@@ -30,7 +29,6 @@ import (
 	"go.viam.com/rdk/referenceframe"
 	"go.viam.com/rdk/registry"
 	"go.viam.com/rdk/resource"
-	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam"
 	"go.viam.com/rdk/spatialmath"
@@ -38,6 +36,7 @@ import (
 	"go.viam.com/rdk/vision"
 	slamConfig "go.viam.com/slam/config"
 	"go.viam.com/slam/dataprocess"
+	slamSensorUtils "go.viam.com/slam/sensors/utils"
 	slamUtils "go.viam.com/slam/utils"
 	goutils "go.viam.com/utils"
 	"go.viam.com/utils/pexec"
@@ -49,7 +48,7 @@ import (
 var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
-    Model = resource.NewModel("viam","slam","orbslamv3")
+	Model                         = resource.NewModel("viam", "slam", "orbslamv3")
 )
 
 const (
@@ -73,22 +72,22 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 }
 
 func init() {
-		registry.RegisterService(slam.Subtype, Model, registry.Service{
-			Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
-				return New(ctx, deps, c, logger, false)
-			},
-		})
-		config.RegisterServiceAttributeMapConverter(slam.Subtype, Model, func(attributes config.AttributeMap) (interface{}, error) {
-			var attrs slamConfig.AttrConfig
-			decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{TagName: "json", Result: &attrs})
-			if err != nil {
-				return nil, err
-			}
-			if err := decoder.Decode(attributes); err != nil {
-				return nil, err
-			}
-			return &attrs, nil
-		}, &slamConfig.AttrConfig{})
+	registry.RegisterService(slam.Subtype, Model, registry.Service{
+		Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
+			return New(ctx, deps, c, logger, false)
+		},
+	})
+	config.RegisterServiceAttributeMapConverter(slam.Subtype, Model, func(attributes config.AttributeMap) (interface{}, error) {
+		var attrs slamConfig.AttrConfig
+		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{TagName: "json", Result: &attrs})
+		if err != nil {
+			return nil, err
+		}
+		if err := decoder.Decode(attributes); err != nil {
+			return nil, err
+		}
+		return &attrs, nil
+	}, &slamConfig.AttrConfig{})
 }
 
 // runtimeServiceValidation ensures the service's data processing and saving is valid for the mode and
@@ -106,23 +105,10 @@ func runtimeServiceValidation(
 	paths := make([]string, 0, 1)
 	startTime := time.Now()
 
-	// TODO 05/05/2022: This will be removed once GRPC data transfer is available as the responsibility for
-	// calling the right algorithms (Next vs NextPointCloud) will be held by the slam libraries themselves
-	// Note: if GRPC data transfer is delayed to after other algorithms (or user custom algos) are being
-	// added this point will be revisited
 	for {
-		switch orbSvc.slamLib.AlgoType {
-		case slam.Sparse:
-			var currPaths []string
-			currPaths, err = orbSvc.getAndSaveDataSparse(ctx, cams)
-			paths = append(paths, currPaths...)
-		case slam.Dense:
-			var path string
-			path, err = orbSvc.getAndSaveDataDense(ctx, cams)
-			paths = append(paths, path)
-		default:
-			return errors.Errorf("invalid slam algorithm %q", orbSvc.slamLib.AlgoName)
-		}
+		var currPaths []string
+		currPaths, err = orbSvc.getAndSaveDataSparse(ctx, cams)
+		paths = append(paths, currPaths...)
 
 		if err == nil {
 			break
@@ -137,11 +123,9 @@ func runtimeServiceValidation(
 		}
 	}
 
-	// For ORBSLAM, generate a new yaml file based off the camera configuration and presence of maps
-	if strings.Contains(orbSvc.slamLib.AlgoName, "orbslamv3") {
-		if err = orbSvc.orbGenYAML(ctx, cams[0]); err != nil {
-			return errors.Wrap(err, "error generating .yaml config")
-		}
+	// Generate a new yaml file based off the camera configuration and presence of maps
+	if err = orbSvc.orbGenYAML(ctx, cams[0]); err != nil {
+		return errors.Wrap(err, "error generating .yaml config")
 	}
 
 	for _, path := range paths {
@@ -256,7 +240,7 @@ func configureCameras(ctx context.Context,
 
 // Position forwards the request for positional data to the slam library's gRPC service. Once a response is received,
 // it is unpacked into a PoseInFrame.
-func (slamSvc *orbslamService) Position(ctx context.Context, name string, extra map[string]interface{}) (*referenceframe.PoseInFrame, error) {
+func (orbSvc *orbslamService) Position(ctx context.Context, name string, extra map[string]interface{}) (*referenceframe.PoseInFrame, error) {
 	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::Position")
 	defer span.End()
 
@@ -267,51 +251,51 @@ func (slamSvc *orbslamService) Position(ctx context.Context, name string, extra 
 
 	var pInFrame *referenceframe.PoseInFrame
 	var returnedExt map[string]interface{}
-    var componentReference string
+	var componentReference string
 
 	// TODO: Once RSDK-1053 (https://viam.atlassian.net/browse/RSDK-1066) is complete the original code before extracting position
 	// from GetPosition will be removed and the GetPositionNew -> GetPosition
-	if slamSvc.dev {
-		slamSvc.logger.Debug("IN DEV MODE (position request)")
+	if orbSvc.dev {
+		orbSvc.logger.Debug("IN DEV MODE (position request)")
 		req := &pb.GetPositionNewRequest{Name: name}
 
-		resp, err := slamSvc.clientAlgo.GetPositionNew(ctx, req)
+		resp, err := orbSvc.clientAlgo.GetPositionNew(ctx, req)
 		if err != nil {
 			return nil, errors.Wrap(err, "error getting SLAM position")
 		}
 
-        componentReference = resp.GetComponentReference()
+		componentReference = resp.GetComponentReference()
 		pInFrame = referenceframe.NewPoseInFrame(componentReference, spatialmath.NewPoseFromProtobuf(resp.GetPose()))
 		returnedExt = resp.Extra.AsMap()
 	} else {
 		//nolint:staticcheck
 		req := &pb.GetPositionRequest{Name: name, Extra: ext}
 
-		resp, err := slamSvc.clientAlgo.GetPosition(ctx, req)
+		resp, err := orbSvc.clientAlgo.GetPosition(ctx, req)
 		if err != nil {
 			return nil, errors.Wrap(err, "error getting SLAM position")
 		}
 
-        componentReference = resp.Pose.ReferenceFrame;
+		componentReference = resp.Pose.ReferenceFrame
 		pInFrame = referenceframe.ProtobufToPoseInFrame(resp.Pose)
 		returnedExt = resp.Extra.AsMap()
 	}
 
-    newPose, _, err := slamUtils.CheckQuaternionFromClientAlgo(pInFrame.Pose(), componentReference, returnedExt);
-    pInFrame = referenceframe.NewPoseInFrame(pInFrame.Parent(), newPose)
+	newPose, _, err := slamUtils.CheckQuaternionFromClientAlgo(pInFrame.Pose(), componentReference, returnedExt)
+	pInFrame = referenceframe.NewPoseInFrame(pInFrame.Parent(), newPose)
 
 	return pInFrame, nil
 }
 
 // GetPosition forwards the request for positional data to the slam library's gRPC service. Once a response is received,
 // it is unpacked into a Pose and a component reference string.
-func (slamSvc *orbslamService) GetPosition(ctx context.Context, name string) (spatialmath.Pose, string, error) {
+func (orbSvc *orbslamService) GetPosition(ctx context.Context, name string) (spatialmath.Pose, string, error) {
 	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::GetPosition")
 	defer span.End()
 
 	req := &pb.GetPositionNewRequest{Name: name}
 
-	resp, err := slamSvc.clientAlgo.GetPositionNew(ctx, req)
+	resp, err := orbSvc.clientAlgo.GetPositionNew(ctx, req)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "error getting SLAM position")
 	}
@@ -324,7 +308,7 @@ func (slamSvc *orbslamService) GetPosition(ctx context.Context, name string) (sp
 
 // GetMap forwards the request for map data to the slam library's gRPC service. Once a response is received it is unpacked
 // into a mimeType and either a vision.Object or image.Image.
-func (slamSvc *orbslamService) GetMap(
+func (orbSvc *orbslamService) GetMap(
 	ctx context.Context,
 	name, mimeType string,
 	cp *referenceframe.PoseInFrame,
@@ -351,8 +335,8 @@ func (slamSvc *orbslamService) GetMap(
 
 	// TODO: Once RSDK-1053 (https://viam.atlassian.net/browse/RSDK-1066) is complete the original code that extracts
 	// the map will be removed and GetMap will be changed to GetPointCloudMap
-	if slamSvc.dev {
-		slamSvc.logger.Debug("IN DEV MODE (map request)")
+	if orbSvc.dev {
+		orbSvc.logger.Debug("IN DEV MODE (map request)")
 
 		//nolint:staticcheck
 		reqPCMap := &pb.GetPointCloudMapRequest{
@@ -364,7 +348,7 @@ func (slamSvc *orbslamService) GetMap(
 		}
 
 		//nolint:staticcheck
-		resp, err := slamSvc.clientAlgo.GetPointCloudMap(ctx, reqPCMap)
+		resp, err := orbSvc.clientAlgo.GetPointCloudMap(ctx, reqPCMap)
 		if err != nil {
 			return "", imData, vObj, errors.Errorf("error getting SLAM map (%v) : %v", mimeType, err)
 		}
@@ -394,7 +378,7 @@ func (slamSvc *orbslamService) GetMap(
 		}
 
 		//nolint:staticcheck
-		resp, err := slamSvc.clientAlgo.GetMap(ctx, req)
+		resp, err := orbSvc.clientAlgo.GetMap(ctx, req)
 		if err != nil {
 			return "", imData, vObj, errors.Errorf("error getting SLAM map (%v) : %v", mimeType, err)
 		}
@@ -428,7 +412,7 @@ func (slamSvc *orbslamService) GetMap(
 
 // GetInternalState forwards the request for the SLAM algorithms's internal state. Once a response is received, it is returned
 // to the user.
-func (slamSvc *orbslamService) GetInternalState(ctx context.Context, name string) ([]byte, error) {
+func (orbSvc *orbslamService) GetInternalState(ctx context.Context, name string) ([]byte, error) {
 	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::GetInternalState")
 	defer span.End()
 
@@ -436,7 +420,7 @@ func (slamSvc *orbslamService) GetInternalState(ctx context.Context, name string
 	req := &pb.GetInternalStateRequest{Name: name}
 
 	//nolint:staticcheck
-	resp, err := slamSvc.clientAlgo.GetInternalState(ctx, req)
+	resp, err := orbSvc.clientAlgo.GetInternalState(ctx, req)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting the internal state from the SLAM client")
 	}
@@ -447,20 +431,20 @@ func (slamSvc *orbslamService) GetInternalState(ctx context.Context, name string
 
 // GetPointCloudMapStream creates a request, calls the slam algorithms GetPointCloudMapStream endpoint and returns a callback
 // function which will return the next chunk of the current pointcloud map.
-func (slamSvc *orbslamService) GetPointCloudMapStream(ctx context.Context, name string) (func() ([]byte, error), error) {
+func (orbSvc *orbslamService) GetPointCloudMapStream(ctx context.Context, name string) (func() ([]byte, error), error) {
 	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::GetPointCloudMapStream")
 	defer span.End()
 
-	return grpchelper.GetPointCloudMapStreamCallback(ctx, name, slamSvc.clientAlgo)
+	return grpchelper.GetPointCloudMapStreamCallback(ctx, name, orbSvc.clientAlgo)
 }
 
 // GetInternalStateStream creates a request, calls the slam algorithms GetInternalStateStream endpoint and returns a callback
 // function which will return the next chunk of the current internal state of the slam algo.
-func (slamSvc *orbslamService) GetInternalStateStream(ctx context.Context, name string) (func() ([]byte, error), error) {
+func (orbSvc *orbslamService) GetInternalStateStream(ctx context.Context, name string) (func() ([]byte, error), error) {
 	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::GetInternalStateStream")
 	defer span.End()
 
-	return grpchelper.GetInternalStateStreamCallback(ctx, name, slamSvc.clientAlgo)
+	return grpchelper.GetInternalStateStreamCallback(ctx, name, orbSvc.clientAlgo)
 }
 
 // New returns a new slam service for the given robot.
@@ -530,7 +514,7 @@ func New(ctx context.Context,
 	cancelCtx, cancelFunc := context.WithCancel(ctx)
 
 	// SLAM Service Object
-	slamSvc := &orbslamService{
+	orbSvc := &orbslamService{
 		primarySensorName:     primarySensorName,
 		slamLib:               slam.SLAMLibraries[string(config.Model.Name)],
 		subAlgo:               subAlgo,
@@ -551,88 +535,89 @@ func New(ctx context.Context,
 	var success bool
 	defer func() {
 		if !success {
-			if err := slamSvc.Close(); err != nil {
+			if err := orbSvc.Close(); err != nil {
 				logger.Errorw("error closing out after error", "error", err)
 			}
 		}
 	}()
 
-	if err := runtimeServiceValidation(cancelCtx, cams, slamSvc); err != nil {
+	if err := runtimeServiceValidation(cancelCtx, cams, orbSvc); err != nil {
 		return nil, errors.Wrap(err, "runtime slam service error")
 	}
 
-	slamSvc.StartDataProcess(cancelCtx, cams, nil)
+	orbSvc.StartDataProcess(cancelCtx, cams, nil)
 
-	if err := slamSvc.StartSLAMProcess(ctx); err != nil {
+	if err := orbSvc.StartSLAMProcess(ctx); err != nil {
 		return nil, errors.Wrap(err, "error with slam service slam process")
 	}
 
-	client, clientClose, err := slamConfig.SetupGRPCConnection(ctx, slamSvc.port, dialMaxTimeoutSec, logger)
+	client, clientClose, err := slamConfig.SetupGRPCConnection(ctx, orbSvc.port, dialMaxTimeoutSec, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error with initial grpc client to slam algorithm")
 	}
-	slamSvc.clientAlgo = client
-	slamSvc.clientAlgoClose = clientClose
+	orbSvc.clientAlgo = client
+	orbSvc.clientAlgoClose = clientClose
 
 	success = true
-	return slamSvc, nil
+	return orbSvc, nil
 }
 
 // Close out of all slam related processes.
-func (slamSvc *orbslamService) Close() error {
+func (orbSvc *orbslamService) Close() error {
 	defer func() {
-		if slamSvc.clientAlgoClose != nil {
-			goutils.UncheckedErrorFunc(slamSvc.clientAlgoClose)
+		if orbSvc.clientAlgoClose != nil {
+			goutils.UncheckedErrorFunc(orbSvc.clientAlgoClose)
 		}
 	}()
-	slamSvc.cancelFunc()
-	if slamSvc.bufferSLAMProcessLogs {
-		if slamSvc.slamProcessLogReader != nil {
+	orbSvc.cancelFunc()
+	if orbSvc.bufferSLAMProcessLogs {
+		if orbSvc.slamProcessLogReader != nil {
 			if err := slamSvc.slamProcessLogReader.Close(); err != nil {
 				return errors.Wrap(err, "error occurred during closeout of slam log reader")
 			}
+			orbSvc.slamProcessLogReader.Close()
 		}
-		if slamSvc.slamProcessLogWriter != nil {
+		if orbSvc.slamProcessLogWriter != nil {
 			if err := slamSvc.slamProcessLogWriter.Close(); err != nil {
 				return errors.Wrap(err, "error occurred during closeout of slam log writer")
 			}
 		}
 	}
-	if err := slamSvc.StopSLAMProcess(); err != nil {
+	if err := orbSvc.StopSLAMProcess(); err != nil {
 		return errors.Wrap(err, "error occurred during closeout of process")
 	}
-	slamSvc.activeBackgroundWorkers.Wait()
+	orbSvc.activeBackgroundWorkers.Wait()
 	return nil
 }
 
 // TODO 05/10/2022: Remove from SLAM service once GRPC data transfer is available.
 // startDataProcess is the background control loop for sending data from camera to the data directory for processing.
-func (slamSvc *orbslamService) StartDataProcess(
+func (orbSvc *orbslamService) StartDataProcess(
 	cancelCtx context.Context,
 	cams []camera.Camera,
 	c chan int,
 ) {
-	if !slamSvc.useLiveData {
+	if !orbSvc.useLiveData {
 		return
 	}
 
-	slamSvc.activeBackgroundWorkers.Add(1)
+	orbSvc.activeBackgroundWorkers.Add(1)
 	if err := cancelCtx.Err(); err != nil {
 		if !errors.Is(err, context.Canceled) {
-			slamSvc.logger.Errorw("unexpected error in SLAM service", "error", err)
+			orbSvc.logger.Errorw("unexpected error in SLAM service", "error", err)
 		}
-		slamSvc.activeBackgroundWorkers.Done()
+		orbSvc.activeBackgroundWorkers.Done()
 		return
 	}
 	goutils.PanicCapturingGo(func() {
-		ticker := time.NewTicker(time.Millisecond * time.Duration(slamSvc.dataRateMs))
+		ticker := time.NewTicker(time.Millisecond * time.Duration(orbSvc.dataRateMs))
 		defer ticker.Stop()
-		defer slamSvc.activeBackgroundWorkers.Done()
+		defer orbSvc.activeBackgroundWorkers.Done()
 
 		for {
 			if err := cancelCtx.Err(); err != nil {
 				if !errors.Is(err, context.Canceled) {
-					slamSvc.logger.Errorw("unexpected error in SLAM data process", "error", err)
+					orbSvc.logger.Errorw("unexpected error in SLAM data process", "error", err)
 				}
 				return
 			}
@@ -641,33 +626,21 @@ func (slamSvc *orbslamService) StartDataProcess(
 			case <-cancelCtx.Done():
 				return
 			case <-ticker.C:
-				slamSvc.activeBackgroundWorkers.Add(1)
+				orbSvc.activeBackgroundWorkers.Add(1)
 				if err := cancelCtx.Err(); err != nil {
 					if !errors.Is(err, context.Canceled) {
-						slamSvc.logger.Errorw("unexpected error in SLAM service", "error", err)
+						orbSvc.logger.Errorw("unexpected error in SLAM service", "error", err)
 					}
-					slamSvc.activeBackgroundWorkers.Done()
+					orbSvc.activeBackgroundWorkers.Done()
 					return
 				}
 				goutils.PanicCapturingGo(func() {
-					defer slamSvc.activeBackgroundWorkers.Done()
-					switch slamSvc.slamLib.AlgoType {
-					case slam.Dense:
-						if _, err := slamSvc.getAndSaveDataDense(cancelCtx, cams); err != nil {
-							slamSvc.logger.Warn(err)
-						}
-						if c != nil {
-							c <- 1
-						}
-					case slam.Sparse:
-						if _, err := slamSvc.getAndSaveDataSparse(cancelCtx, cams); err != nil {
-							slamSvc.logger.Warn(err)
-						}
-						if c != nil {
-							c <- 1
-						}
-					default:
-						slamSvc.logger.Warnw("warning invalid algorithm specified", "algorithm", slamSvc.slamLib.AlgoType)
+					defer orbSvc.activeBackgroundWorkers.Done()
+					if _, err := orbSvc.getAndSaveDataSparse(cancelCtx, cams); err != nil {
+						orbSvc.logger.Warn(err)
+					}
+					if c != nil {
+						c <- 1
 					}
 				})
 			}
@@ -676,74 +649,74 @@ func (slamSvc *orbslamService) StartDataProcess(
 }
 
 // GetSLAMProcessConfig returns the process config for the SLAM process.
-func (slamSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
+func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	var args []string
 
-	args = append(args, "-sensors="+slamSvc.primarySensorName)
-	args = append(args, "-config_param="+slamUtils.DictToString(slamSvc.configParams))
-	args = append(args, "-data_rate_ms="+strconv.Itoa(slamSvc.dataRateMs))
-	args = append(args, "-map_rate_sec="+strconv.Itoa(slamSvc.mapRateSec))
-	args = append(args, "-data_dir="+slamSvc.dataDirectory)
-	args = append(args, "-delete_processed_data="+strconv.FormatBool(slamSvc.deleteProcessedData))
-	args = append(args, "-use_live_data="+strconv.FormatBool(slamSvc.useLiveData))
-	args = append(args, "-port="+slamSvc.port)
+	args = append(args, "-sensors="+orbSvc.primarySensorName)
+	args = append(args, "-config_param="+slamUtils.DictToString(orbSvc.configParams))
+	args = append(args, "-data_rate_ms="+strconv.Itoa(orbSvc.dataRateMs))
+	args = append(args, "-map_rate_sec="+strconv.Itoa(orbSvc.mapRateSec))
+	args = append(args, "-data_dir="+orbSvc.dataDirectory)
+	args = append(args, "-delete_processed_data="+strconv.FormatBool(orbSvc.deleteProcessedData))
+	args = append(args, "-use_live_data="+strconv.FormatBool(orbSvc.useLiveData))
+	args = append(args, "-port="+orbSvc.port)
 	args = append(args, "--aix-auto-update")
 
 	return pexec.ProcessConfig{
-		ID:      "slam_" + slamSvc.slamLib.AlgoName,
-		Name:    slam.SLAMLibraries[slamSvc.slamLib.AlgoName].BinaryLocation,
+		ID:      "slam_" + orbSvc.slamLib.AlgoName,
+		Name:    slam.SLAMLibraries[orbSvc.slamLib.AlgoName].BinaryLocation,
 		Args:    args,
 		Log:     true,
 		OneShot: false,
 	}
 }
 
-func (slamSvc *orbslamService) GetSLAMProcessBufferedLogReader() bufio.Reader {
-	return slamSvc.slamProcessBufferedLogReader
+func (orbSvc *orbslamService) GetSLAMProcessBufferedLogReader() bufio.Reader {
+	return orbSvc.slamProcessBufferedLogReader
 }
 
 // startSLAMProcess starts up the SLAM library process by calling the executable binary and giving it the necessary arguments.
-func (slamSvc *orbslamService) StartSLAMProcess(ctx context.Context) error {
+func (orbSvc *orbslamService) StartSLAMProcess(ctx context.Context) error {
 	ctx, span := trace.StartSpan(ctx, "slam::slamService::StartSLAMProcess")
 	defer span.End()
 
-	processConfig := slamSvc.GetSLAMProcessConfig()
+	processConfig := orbSvc.GetSLAMProcessConfig()
 
 	var logReader io.ReadCloser
 	var logWriter io.WriteCloser
 	var bufferedLogReader bufio.Reader
-	if slamSvc.port == localhost0 || slamSvc.bufferSLAMProcessLogs {
+	if orbSvc.port == localhost0 || orbSvc.bufferSLAMProcessLogs {
 		logReader, logWriter = io.Pipe()
 		bufferedLogReader = *bufio.NewReader(logReader)
 		processConfig.LogWriter = logWriter
 	}
 
-	_, err := slamSvc.slamProcess.AddProcessFromConfig(ctx, processConfig)
+	_, err := orbSvc.slamProcess.AddProcessFromConfig(ctx, processConfig)
 	if err != nil {
 		return errors.Wrap(err, "problem adding slam process")
 	}
 
-	slamSvc.logger.Debug("starting slam process")
+	orbSvc.logger.Debug("starting slam process")
 
-	if err = slamSvc.slamProcess.Start(ctx); err != nil {
+	if err = orbSvc.slamProcess.Start(ctx); err != nil {
 		return errors.Wrap(err, "problem starting slam process")
 	}
 
-	if slamSvc.port == localhost0 {
+	if orbSvc.port == localhost0 {
 		timeoutCtx, timeoutCancel := context.WithTimeout(ctx, parsePortMaxTimeoutSec*time.Second)
 		defer timeoutCancel()
 
-		if !slamSvc.bufferSLAMProcessLogs {
+		if !orbSvc.bufferSLAMProcessLogs {
 			defer func(logger golog.Logger) {
 				if err := logReader.Close(); err != nil {
 					logger.Debugw("Closing logReader returned an error", "error", err)
 				}
-			}(slamSvc.logger)
+			}(orbSvc.logger)
 			defer func(logger golog.Logger) {
 				if err := logWriter.Close(); err != nil {
 					logger.Debugw("Closing logReader returned an error", "error", err)
 				}
-			}(slamSvc.logger)
+			}(orbSvc.logger)
 		}
 
 		for {
@@ -761,82 +734,56 @@ func (slamSvc *orbslamService) StartSLAMProcess(ctx context.Context) error {
 				if len(linePieces) != 2 {
 					return errors.Errorf("failed to parse port from slam process log line: %v", line)
 				}
-				slamSvc.port = "localhost:" + strings.TrimRight(linePieces[1], "\n")
+				orbSvc.port = "localhost:" + strings.TrimRight(linePieces[1], "\n")
 				break
 			}
 		}
 	}
 
-	if slamSvc.bufferSLAMProcessLogs {
-		slamSvc.slamProcessLogReader = logReader
-		slamSvc.slamProcessLogWriter = logWriter
-		slamSvc.slamProcessBufferedLogReader = bufferedLogReader
+	if orbSvc.bufferSLAMProcessLogs {
+		orbSvc.slamProcessLogReader = logReader
+		orbSvc.slamProcessLogWriter = logWriter
+		orbSvc.slamProcessBufferedLogReader = bufferedLogReader
 	}
 
 	return nil
 }
 
 // stopSLAMProcess uses the process manager to stop the created slam process from running.
-func (slamSvc *orbslamService) StopSLAMProcess() error {
-	if err := slamSvc.slamProcess.Stop(); err != nil {
+func (orbSvc *orbslamService) StopSLAMProcess() error {
+	if err := orbSvc.slamProcess.Stop(); err != nil {
 		return errors.Wrap(err, "problem stopping slam process")
 	}
 	return nil
 }
 
-func (slamSvc *orbslamService) getPNGImage(ctx context.Context, cam camera.Camera) ([]byte, func(), error) {
-	// We will hint that we want a PNG.
-	// The Camera service server implementation in RDK respects this; others may not.
-	readImgCtx := gostream.WithMIMETypeHint(ctx, rdkutils.WithLazyMIMEType(rdkutils.MimeTypePNG))
-	img, release, err := camera.ReadImage(readImgCtx, cam)
-	if err != nil {
-		return nil, nil, err
-	}
-	if lazyImg, ok := img.(*rimage.LazyEncodedImage); ok {
-		if lazyImg.MIMEType() != rdkutils.MimeTypePNG {
-			return nil, nil, errors.Errorf("expected mime type %v, got %T", rdkutils.MimeTypePNG, img)
-		}
-		return lazyImg.RawData(), release, nil
-	}
-
-	if ycbcrImg, ok := img.(*image.YCbCr); ok {
-		pngImage, err := rimage.EncodeImage(ctx, ycbcrImg, rdkutils.MimeTypePNG)
-		if err != nil {
-			return nil, nil, err
-		}
-		return pngImage, release, nil
-	}
-
-	return nil, nil, errors.Errorf("expected lazily encoded image or ycbcrImg, got %T", img)
-}
-
 // getAndSaveDataSparse implements the data extraction for sparse algos and saving to the directory path (data subfolder) specified in
 // the config. It returns the full filepath for each file saved along with any error associated with the data creation or saving.
-func (slamSvc *orbslamService) getAndSaveDataSparse(
+func (orbSvc *orbslamService) getAndSaveDataSparse(
 	ctx context.Context,
 	cams []camera.Camera,
 ) ([]string, error) {
 	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::getAndSaveDataSparse")
 	defer span.End()
 
-	switch slamSvc.subAlgo {
+	switch orbSvc.subAlgo {
 	case slam.Mono:
 		if len(cams) != 1 {
 			return nil, errors.Errorf("expected 1 camera for mono slam, found %v", len(cams))
 		}
 
-		image, release, err := slamSvc.getPNGImage(ctx, cams[0])
+		image, release, err := slamSensorUtils.GetPNGImage(ctx, cams[0])
 		if release != nil {
 			defer release()
 		}
 		if err != nil {
 			if err.Error() == opTimeoutErrorMessage {
-				slamSvc.logger.Warnw("Skipping this scan due to error", "error", err)
+				orbSvc.logger.Warnw("Skipping this scan due to error", "error", err)
 				return nil, nil
 			}
 			return nil, err
 		}
-		filenames, err := createTimestampFilenames(slamSvc.dataDirectory, slamSvc.primarySensorName, ".png", slamSvc.subAlgo)
+		filenames, err := createTimestampFilenames(orbSvc.dataDirectory, orbSvc.primarySensorName, ".png", orbSvc.subAlgo)
 		if err != nil {
 			return nil, err
 		}
@@ -848,7 +795,7 @@ func (slamSvc *orbslamService) getAndSaveDataSparse(
 			return nil, errors.Errorf("expected 2 cameras for Rgbd slam, found %v", len(cams))
 		}
 
-		images, releaseFuncs, err := slamSvc.getSimultaneousColorAndDepth(ctx, cams)
+		images, releaseFuncs, err := orbSvc.getSimultaneousColorAndDepth(ctx, cams)
 		for _, rFunc := range releaseFuncs {
 			if rFunc != nil {
 				defer rFunc()
@@ -856,13 +803,13 @@ func (slamSvc *orbslamService) getAndSaveDataSparse(
 		}
 		if err != nil {
 			if err.Error() == opTimeoutErrorMessage {
-				slamSvc.logger.Warnw("Skipping this scan due to error", "error", err)
+				orbSvc.logger.Warnw("Skipping this scan due to error", "error", err)
 				return nil, nil
 			}
 			return nil, err
 		}
 
-		filenames, err := createTimestampFilenames(slamSvc.dataDirectory, slamSvc.primarySensorName, ".png", slamSvc.subAlgo)
+		filenames, err := createTimestampFilenames(orbSvc.dataDirectory, orbSvc.primarySensorName, ".png", orbSvc.subAlgo)
 		if err != nil {
 			return nil, err
 		}
@@ -872,17 +819,13 @@ func (slamSvc *orbslamService) getAndSaveDataSparse(
 			}
 		}
 		return filenames, nil
-	case slam.Dim2d:
-		return nil, errors.Errorf("bad slamMode %v specified for this algorithm", slamSvc.slamMode)
-	case slam.Dim3d:
-		return nil, errors.New("Dim3d is not implemented")
 	default:
-		return nil, errors.Errorf("invalid subAlgo %v specified", slamSvc.subAlgo)
+		return nil, errors.Errorf("invalid subAlgo %v specified", orbSvc.subAlgo)
 	}
 }
 
 // Gets the color image and depth image from the cameras as close to simultaneously as possible.
-func (slamSvc *orbslamService) getSimultaneousColorAndDepth(
+func (orbSvc *orbslamService) getSimultaneousColorAndDepth(
 	ctx context.Context,
 	cams []camera.Camera,
 ) ([2][]byte, [2]func(), error) {
@@ -892,20 +835,20 @@ func (slamSvc *orbslamService) getSimultaneousColorAndDepth(
 	var errs [2]error
 
 	for i := 0; i < 2; i++ {
-		slamSvc.activeBackgroundWorkers.Add(1)
+		orbSvc.activeBackgroundWorkers.Add(1)
 		wg.Add(1)
 		if err := ctx.Err(); err != nil {
 			if !errors.Is(err, context.Canceled) {
-				slamSvc.logger.Errorw("unexpected error in SLAM service", "error", err)
+				orbSvc.logger.Errorw("unexpected error in SLAM service", "error", err)
 			}
-			slamSvc.activeBackgroundWorkers.Done()
+			orbSvc.activeBackgroundWorkers.Done()
 			return images, releaseFuncs, err
 		}
 		iLoop := i
 		goutils.PanicCapturingGo(func() {
-			defer slamSvc.activeBackgroundWorkers.Done()
+			defer orbSvc.activeBackgroundWorkers.Done()
 			defer wg.Done()
-			images[iLoop], releaseFuncs[iLoop], errs[iLoop] = slamSvc.getPNGImage(ctx, cams[iLoop])
+			images[iLoop], releaseFuncs[iLoop], errs[iLoop] = slamSensorUtils.GetPNGImage(ctx, cams[iLoop])
 		})
 	}
 	wg.Wait()
@@ -917,40 +860,6 @@ func (slamSvc *orbslamService) getSimultaneousColorAndDepth(
 	}
 
 	return images, releaseFuncs, nil
-}
-
-// getAndSaveDataDense implements the data extraction for dense algos and saving to the directory path (data subfolder) specified in
-// the config. It returns the full filepath for each file saved along with any error associated with the data creation or saving.
-func (slamSvc *orbslamService) getAndSaveDataDense(ctx context.Context, cams []camera.Camera) (string, error) {
-	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::getAndSaveDataDense")
-	defer span.End()
-
-	if len(cams) != 1 {
-		return "", errors.Errorf("expected 1 camera for this slam algorithm, found %v", len(cams))
-	}
-
-	pointcloud, err := cams[0].NextPointCloud(ctx)
-	if err != nil {
-		if err.Error() == opTimeoutErrorMessage {
-			slamSvc.logger.Warnw("Skipping this scan due to error", "error", err)
-			return "", nil
-		}
-		return "", err
-	}
-
-	var fileType string
-	switch slamSvc.subAlgo {
-	case slam.Dim2d:
-		fileType = ".pcd"
-	case slam.Rgbd, slam.Mono:
-		return "", errors.Errorf("bad subAlgo %v specified for this algorithm", slamSvc.subAlgo)
-	}
-	filenames, err := createTimestampFilenames(slamSvc.dataDirectory, slamSvc.primarySensorName, fileType, slamSvc.subAlgo)
-	if err != nil {
-		return "", err
-	}
-	filename := filenames[0]
-	return filename, dataprocess.WritePCDToFile(pointcloud, filename)
 }
 
 // Creates a file for camera data with the specified sensor name and timestamp written into the filename.
