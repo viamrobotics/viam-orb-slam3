@@ -18,15 +18,13 @@ import (
 	"go.viam.com/rdk/services/slam/builtin"
 	slamConfig "go.viam.com/slam/config"
 	slamTesthelper "go.viam.com/slam/testhelper"
+    dataprocess "go.viam.com/slam/dataprocess"
 	"go.viam.com/test"
 	"go.viam.com/utils"
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	yamlFilePrefixBytes = "%YAML:1.0\n"
-	slamTimeFormat      = "2006-01-02T15:04:05.0000Z"
-)
+const yamlFilePrefixBytes = "%YAML:1.0\n"
 
 // function to search a SLAM data dir for a .yaml file. returns the timestamp and filepath.
 func findLastYAML(folderName string) (string, string, error) {
@@ -40,7 +38,7 @@ func findLastYAML(folderName string) (string, string, error) {
 			// check if the file uses our format and grab timestamp if it does
 			timestampLoc := strings.Index(entry.Name(), "_data_") + len("_data_")
 			if timestampLoc != -1+len("_data_") {
-				timestamp, err := time.Parse(slamTimeFormat, entry.Name()[timestampLoc:strings.Index(entry.Name(), yamlExt)])
+				timestamp, err := time.Parse(dataprocess.SlamTimeFormat, entry.Name()[timestampLoc:strings.Index(entry.Name(), yamlExt)])
 				if err != nil {
 					return errors.Wrap(err, "Unable to parse yaml")
 				}
@@ -58,7 +56,7 @@ func findLastYAML(folderName string) (string, string, error) {
 	if yamlTimestamp.IsZero() {
 		return "", "", errors.New("No yaml file found")
 	}
-	return yamlTimestamp.UTC().Format(slamTimeFormat), yamlPath, nil
+	return yamlTimestamp.UTC().Format(dataprocess.SlamTimeFormat), yamlPath, nil
 }
 
 func TestOrbslamYAMLNew(t *testing.T) {
