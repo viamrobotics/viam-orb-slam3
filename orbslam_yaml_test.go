@@ -14,14 +14,13 @@ import (
 
 	"github.com/edaniels/golog"
 	"github.com/pkg/errors"
-	"go.viam.com/test"
-	"go.viam.com/utils"
-	"gopkg.in/yaml.v2"
-
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam/builtin"
 	slamConfig "go.viam.com/slam/config"
 	slamTesthelper "go.viam.com/slam/testhelper"
+	"go.viam.com/test"
+	"go.viam.com/utils"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -147,7 +146,6 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		test.That(t, orbslam.LoadMapLoc, test.ShouldEqual, "")
 		test.That(t, orbslam.FPSCamera, test.ShouldEqual, 5)
 
-		//save a fake map for the next map using the previous timestamp
 		fakeMap = filepath.Join(name, "map", attrCfgGood.Sensors[0]+"_data_"+yamlFileTimeStampGood)
 		outfile, err := os.Create(fakeMap + ".osa")
 		test.That(t, err, test.ShouldBeNil)

@@ -11,11 +11,10 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
-
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/utils"
+	"gopkg.in/yaml.v2"
 )
 
 const (

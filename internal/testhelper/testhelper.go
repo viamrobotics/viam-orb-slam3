@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	"github.com/golang/geo/r3"
-	"go.viam.com/test"
-	"go.viam.com/utils/pexec"
-
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/pointcloud"
+	"go.viam.com/test"
+	"go.viam.com/utils/pexec"
 )
 
 // Service in the internal package includes additional exported functions relating to the data and

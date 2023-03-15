@@ -21,10 +21,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
-	goutils "go.viam.com/utils"
-	"go.viam.com/utils/pexec"
-	"go.viam.com/utils/protoutils"
-
 	v1 "go.viam.com/api/common/v1"
 	pb "go.viam.com/api/service/slam/v1"
 	"go.viam.com/rdk/components/camera"
@@ -37,13 +33,17 @@ import (
 	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam"
-	"github.com/viamrobotics/viam-orb-slam3/internal/grpchelper"
 	"go.viam.com/rdk/spatialmath"
 	rdkutils "go.viam.com/rdk/utils"
 	"go.viam.com/rdk/vision"
 	slamConfig "go.viam.com/slam/config"
 	"go.viam.com/slam/dataprocess"
 	slamUtils "go.viam.com/slam/utils"
+	goutils "go.viam.com/utils"
+	"go.viam.com/utils/pexec"
+	"go.viam.com/utils/protoutils"
+
+	"github.com/viamrobotics/viam-orb-slam3/internal/grpchelper"
 )
 
 var (
@@ -75,7 +75,7 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 // TBD 05/04/2022: Needs more work once GRPC is included (future PR).
 func init() {
 	for _, slamLibrary := range slam.SLAMLibraries {
-		sModel := resource.NewModel("TODO","ZACK",resource.ModelName(slamLibrary.AlgoName))
+		sModel := resource.NewModel("TODO", "ZACK", resource.ModelName(slamLibrary.AlgoName))
 		registry.RegisterService(slam.Subtype, sModel, registry.Service{
 			Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
 				return NewBuiltIn(ctx, deps, c, logger, false)
@@ -234,7 +234,6 @@ func configureCameras(ctx context.Context, svcConfig *slamConfig.AttrConfig, dep
 			}
 			if err := brownConrady.CheckValid(); err != nil {
 				return "", nil, errors.Wrapf(err, "error validating distortion_parameters for slam service")
-
 			}
 		}
 
@@ -284,7 +283,6 @@ func (slamSvc *builtIn) Position(ctx context.Context, name string, extra map[str
 
 		pInFrame = referenceframe.NewPoseInFrame(resp.GetComponentReference(), spatialmath.NewPoseFromProtobuf(resp.GetPose()))
 		returnedExt = resp.Extra.AsMap()
-
 	} else {
 		req := &pb.GetPositionRequest{Name: name, Extra: ext}
 
@@ -336,7 +334,7 @@ func (slamSvc *builtIn) GetPosition(ctx context.Context, name string) (spatialma
 	componentReference := resp.GetComponentReference()
 	returnedExt := resp.Extra.AsMap()
 
-	return checkQuaternionFromClientAlgo(pose, componentReference, returnedExt)
+	return slamUtils.CheckQuaternionFromClientAlgo(pose, componentReference, returnedExt)
 }
 
 // GetMap forwards the request for map data to the slam library's gRPC service. Once a response is received it is unpacked
@@ -380,7 +378,6 @@ func (slamSvc *builtIn) GetMap(
 		}
 
 		resp, err := slamSvc.clientAlgo.GetPointCloudMap(ctx, reqPCMap)
-
 		if err != nil {
 			return "", imData, vObj, errors.Errorf("error getting SLAM map (%v) : %v", mimeType, err)
 		}
@@ -400,7 +397,6 @@ func (slamSvc *builtIn) GetMap(
 
 		mimeType = rdkutils.MimeTypePCD
 	} else {
-
 		req := &pb.GetMapRequest{
 			Name:               name,
 			MimeType:           mimeType,
@@ -410,7 +406,6 @@ func (slamSvc *builtIn) GetMap(
 		}
 
 		resp, err := slamSvc.clientAlgo.GetMap(ctx, req)
-
 		if err != nil {
 			return "", imData, vObj, errors.Errorf("error getting SLAM map (%v) : %v", mimeType, err)
 		}
@@ -524,8 +519,7 @@ func NewBuiltIn(ctx context.Context, deps registry.Dependencies, config config.S
 		}
 	}
 
-	port, dataRateMsec, mapRateSec, useLiveData, deleteProcessedData, err :=
-		slamConfig.GetOptionalParameters(svcConfig, localhost0, defaultDataRateMsec, defaultMapRateSec, logger)
+	port, dataRateMsec, mapRateSec, useLiveData, deleteProcessedData, err := slamConfig.GetOptionalParameters(svcConfig, localhost0, defaultDataRateMsec, defaultMapRateSec, logger)
 	if err != nil {
 		return nil, err
 	}

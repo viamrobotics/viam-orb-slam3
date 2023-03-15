@@ -21,11 +21,6 @@ import (
 	"github.com/edaniels/gostream"
 	"github.com/golang/geo/r3"
 	"github.com/pkg/errors"
-	"go.viam.com/test"
-	"go.viam.com/utils"
-	"go.viam.com/utils/artifact"
-	"google.golang.org/grpc"
-
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/config"
 	"go.viam.com/rdk/pointcloud"
@@ -36,12 +31,17 @@ import (
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam"
 	"go.viam.com/rdk/services/slam/builtin"
-	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 	spatial "go.viam.com/rdk/spatialmath"
 	"go.viam.com/rdk/testutils/inject"
 	rdkutils "go.viam.com/rdk/utils"
 	slamConfig "go.viam.com/slam/config"
 	slamTesthelper "go.viam.com/slam/testhelper"
+	"go.viam.com/test"
+	"go.viam.com/utils"
+	"go.viam.com/utils/artifact"
+	"google.golang.org/grpc"
+
+	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 
 const (
@@ -139,7 +139,8 @@ func setupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 		RadialK2:     -0.485405,
 		RadialK3:     0.435342,
 		TangentialP1: -0.00143327,
-		TangentialP2: -0.000705919}
+		TangentialP2: -0.000705919,
+	}
 	projRealSense = intrinsicsRealSense
 
 	var projWebcam transform.Projector
@@ -156,7 +157,8 @@ func setupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 		RadialK2:     0.8002516496932317,
 		RadialK3:     -5.408034254951954,
 		TangentialP1: -8.996658362365533e-06,
-		TangentialP2: -0.002828504714921335}
+		TangentialP2: -0.002828504714921335,
+	}
 	projWebcam = intrinsicsWebcam
 
 	for _, sensor := range attr.Sensors {
@@ -556,7 +558,6 @@ func TestGeneralNew(t *testing.T) {
 		_, err := createSLAMService(t, attrCfg, "fake_cartographer", logger, false, false)
 		test.That(t, err, test.ShouldBeError,
 			errors.New("configuring camera error: error getting camera gibberish for slam service: \"gibberish\" missing from dependencies"))
-
 	})
 
 	t.Run("New slam service with invalid slam algo type", func(t *testing.T) {
@@ -1032,7 +1033,6 @@ func TestSLAMProcessSuccess(t *testing.T) {
 	createFakeSLAMLibraries()
 
 	t.Run("Test online SLAM process with default parameters", func(t *testing.T) {
-
 		grpcServer, port := setupTestGRPCServer(t)
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"good_lidar"},
@@ -1074,7 +1074,6 @@ func TestSLAMProcessSuccess(t *testing.T) {
 	})
 
 	t.Run("Test offline SLAM process with default parameters", func(t *testing.T) {
-
 		grpcServer, port := setupTestGRPCServer(t)
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{},
