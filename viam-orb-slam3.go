@@ -49,6 +49,7 @@ var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
 	Model                         = resource.NewModel("viam", "slam", "orbslamv3")
+    SlamMode = map[string]slam.Mode{"mono":slam.Mono, "rgbd": slam.Rgbd}
 )
 
 const (
@@ -59,6 +60,8 @@ const (
 	// time format for the slam service.
 	opTimeoutErrorMessage = "bad scan: OpTimeout"
 	localhost0            = "localhost:0"
+    AlgoName = "orbslamv3"
+    BinaryLocation = "orb_grpc_server"
 )
 
 // SetCameraValidationMaxTimeoutSecForTesting sets cameraValidationMaxTimeoutSec for testing.
@@ -141,7 +144,6 @@ func runtimeServiceValidation(
 type orbslamService struct {
 	generic.Unimplemented
 	primarySensorName string
-	slamLib           slam.LibraryMetadata
 	subAlgo           slam.Mode
 	slamProcess       pexec.ProcessManager
 	clientAlgo        pb.SLAMServiceClient
@@ -468,12 +470,11 @@ func New(ctx context.Context,
 	}
 
 	modelName := string(config.Model.Name)
-	slamLib, ok := slam.SLAMLibraries[modelName]
 	if !ok {
 		return nil, errors.Errorf("%v algorithm specified not in implemented list", modelName)
 	}
 
-	subAlgo, ok := slamLib.SlamMode[svcConfig.ConfigParams["mode"]]
+	subAlgo, ok := SlamMode[svcConfig.ConfigParams["mode"]]
 	if !ok {
 		return nil, errors.Errorf("getting data with specified algorithm %v, and desired mode %v",
 			modelName, svcConfig.ConfigParams["mode"])
@@ -516,7 +517,6 @@ func New(ctx context.Context,
 	// SLAM Service Object
 	orbSvc := &orbslamService{
 		primarySensorName:     primarySensorName,
-		slamLib:               slam.SLAMLibraries[string(config.Model.Name)],
 		subAlgo:               subAlgo,
 		slamProcess:           pexec.NewProcessManager(logger),
 		configParams:          svcConfig.ConfigParams,
@@ -663,8 +663,8 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	args = append(args, "--aix-auto-update")
 
 	return pexec.ProcessConfig{
-		ID:      "slam_" + orbSvc.slamLib.AlgoName,
-		Name:    slam.SLAMLibraries[orbSvc.slamLib.AlgoName].BinaryLocation,
+		ID:      "slam_orbslamv3",
+		Name:    BinaryLocation,
 		Args:    args,
 		Log:     true,
 		OneShot: false,
