@@ -63,7 +63,7 @@ const (
 	localhost0            = "localhost:0"
 )
 
-// This gets created from the subAlgo parameter
+// SubAlgo defines the ORB_SLAM3 specific algorithms that we support
 type SubAlgo string
 
 const (
