@@ -255,7 +255,7 @@ func configureCameras(ctx context.Context,
 // Position forwards the request for positional data to the slam library's gRPC service. Once a response is received,
 // it is unpacked into a PoseInFrame.
 func (orbSvc *orbslamService) Position(ctx context.Context, name string, extra map[string]interface{}) (*referenceframe.PoseInFrame, error) {
-	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::Position")
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::Position")
 	defer span.End()
 
 	ext, err := protoutils.StructToStructPb(extra)
@@ -304,7 +304,7 @@ func (orbSvc *orbslamService) Position(ctx context.Context, name string, extra m
 // GetPosition forwards the request for positional data to the slam library's gRPC service. Once a response is received,
 // it is unpacked into a Pose and a component reference string.
 func (orbSvc *orbslamService) GetPosition(ctx context.Context, name string) (spatialmath.Pose, string, error) {
-	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::GetPosition")
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPosition")
 	defer span.End()
 
 	req := &pb.GetPositionNewRequest{Name: name}
@@ -331,7 +331,7 @@ func (orbSvc *orbslamService) GetMap(
 ) (
 	string, image.Image, *vision.Object, error,
 ) {
-	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::GetMap")
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetMap")
 	defer span.End()
 
 	var cameraPosition *v1.Pose
@@ -427,7 +427,7 @@ func (orbSvc *orbslamService) GetMap(
 // GetInternalState forwards the request for the SLAM algorithms's internal state. Once a response is received, it is returned
 // to the user.
 func (orbSvc *orbslamService) GetInternalState(ctx context.Context, name string) ([]byte, error) {
-	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::GetInternalState")
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetInternalState")
 	defer span.End()
 
 	//nolint:staticcheck
@@ -446,7 +446,7 @@ func (orbSvc *orbslamService) GetInternalState(ctx context.Context, name string)
 // GetPointCloudMapStream creates a request, calls the slam algorithms GetPointCloudMapStream endpoint and returns a callback
 // function which will return the next chunk of the current pointcloud map.
 func (orbSvc *orbslamService) GetPointCloudMapStream(ctx context.Context, name string) (func() ([]byte, error), error) {
-	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::GetPointCloudMapStream")
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPointCloudMapStream")
 	defer span.End()
 
 	return grpchelper.GetPointCloudMapStreamCallback(ctx, name, orbSvc.clientAlgo)
@@ -455,7 +455,7 @@ func (orbSvc *orbslamService) GetPointCloudMapStream(ctx context.Context, name s
 // GetInternalStateStream creates a request, calls the slam algorithms GetInternalStateStream endpoint and returns a callback
 // function which will return the next chunk of the current internal state of the slam algo.
 func (orbSvc *orbslamService) GetInternalStateStream(ctx context.Context, name string) (func() ([]byte, error), error) {
-	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::GetInternalStateStream")
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetInternalStateStream")
 	defer span.End()
 
 	return grpchelper.GetInternalStateStreamCallback(ctx, name, orbSvc.clientAlgo)
@@ -468,7 +468,7 @@ func New(ctx context.Context,
     logger golog.Logger, 
     bufferSLAMProcessLogs bool,
 ) (slam.Service, error) {
-	ctx, span := trace.StartSpan(ctx, "slam::slamService::New")
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()
 
 	svcConfig, ok := config.ConvertedAttributes.(*slamConfig.AttrConfig)
@@ -683,7 +683,7 @@ func (orbSvc *orbslamService) GetSLAMProcessBufferedLogReader() bufio.Reader {
 
 // startSLAMProcess starts up the SLAM library process by calling the executable binary and giving it the necessary arguments.
 func (orbSvc *orbslamService) StartSLAMProcess(ctx context.Context) error {
-	ctx, span := trace.StartSpan(ctx, "slam::slamService::StartSLAMProcess")
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::StartSLAMProcess")
 	defer span.End()
 
 	processConfig := orbSvc.GetSLAMProcessConfig()
@@ -769,7 +769,7 @@ func (orbSvc *orbslamService) getAndSaveData(
 	ctx context.Context,
 	cams []camera.Camera,
 ) ([]string, error) {
-	ctx, span := trace.StartSpan(ctx, "slam::orbslamService::getAndSaveDataSparse")
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::getAndSaveDataSparse")
 	defer span.End()
 
 	switch orbSvc.subAlgo {
