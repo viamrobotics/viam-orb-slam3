@@ -477,7 +477,7 @@ func createSLAMService(
 	attrCfg *slamConfig.AttrConfig,
 	model string,
 	logger golog.Logger,
-	// TODO(zack) will be fixed with integration tests in the next few PRs
+	// TODO(RSDK-2026) will be fixed once integration tests use this option the next few PRs
 	//nolint:unparam
 	bufferSLAMProcessLogs bool,
 	success bool,
