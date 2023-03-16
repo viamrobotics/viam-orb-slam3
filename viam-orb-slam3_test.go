@@ -799,10 +799,10 @@ func TestSLAMProcessSuccess(t *testing.T) {
 	t.Run("Test online SLAM process with default parameters", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
 		orignalBinaryLocation := viamorbslam3.BinaryLocation
-        // This test executes the binary but we are not running
-        // integration tests so we cannot be sure that orb_grpc_server
-        // is installed. However, we can use the program 'true'
-        // to emulate testing the argument passing and execution
+		// This test executes the binary but we are not running
+		// integration tests so we cannot be sure that orb_grpc_server
+		// is installed. However, we can use the program 'true'
+		// to emulate testing the argument passing and execution
 		viamorbslam3.SetBinaryLocationForTesting("true")
 		defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 		attrCfg := &slamConfig.AttrConfig{
@@ -914,9 +914,9 @@ func TestSLAMProcessFail(t *testing.T) {
 		cancelCtx, cancelFunc := context.WithCancel(context.Background())
 
 		orignalBinaryLocation := viamorbslam3.BinaryLocation
-        // This test ensures that we get the correct error if the user does 
-        // not have the correct binary installed. This sets the binary path to some 
-        // unused value and then tests to ensure that creating a SLAM process fails
+		// This test ensures that we get the correct error if the user does
+		// not have the correct binary installed. This sets the binary path to some
+		// unused value and then tests to ensure that creating a SLAM process fails
 		viamorbslam3.SetBinaryLocationForTesting("fail_this_binary_does_not_exist")
 		defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 		err := slamSvc.StartSLAMProcess(cancelCtx)
