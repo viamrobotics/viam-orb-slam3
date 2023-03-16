@@ -429,7 +429,6 @@ func createSLAMService(
 
 	viamorbslam3.SetCameraValidationMaxTimeoutSecForTesting(1)
 	viamorbslam3.SetDialMaxTimeoutSecForTesting(1)
-	viamorbslam3.SetBinaryLocationForTesting("true")
 
 	svc, err := viamorbslam3.New(ctx, deps, cfgService, logger, bufferSLAMProcessLogs)
 
@@ -799,6 +798,9 @@ func TestSLAMProcessSuccess(t *testing.T) {
 
 	t.Run("Test online SLAM process with default parameters", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
+		orignalBinaryLocation := viamorbslam3.BinaryLocation
+		viamorbslam3.SetBinaryLocationForTesting("true")
+		defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"good_color_camera", "good_depth_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd", "test_param": "viam"},
