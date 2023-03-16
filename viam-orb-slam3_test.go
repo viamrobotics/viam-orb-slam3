@@ -57,7 +57,7 @@ var (
 	_false                            = false
 )
 
-func getNumOrbslamImages(mode viamorbslam3.OrbslamAlgorithm) int {
+func getNumOrbslamImages(mode viamorbslam3.SubAlgo) int {
 	switch mode {
 	case viamorbslam3.Mono:
 		return 15

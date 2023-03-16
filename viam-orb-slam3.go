@@ -61,15 +61,14 @@ const (
 	// time format for the slam service.
 	opTimeoutErrorMessage = "bad scan: OpTimeout"
 	localhost0            = "localhost:0"
-	AlgoName              = "orbslamv3"
 )
 
 // This gets created from the subAlgo parameter
-type OrbslamAlgorithm string
+type SubAlgo string
 
 const (
-	Mono OrbslamAlgorithm = "mono"
-	Rgbd OrbslamAlgorithm = "rgbd"
+	Mono SubAlgo = "mono"
+	Rgbd SubAlgo = "rgbd"
 )
 
 // SetCameraValidationMaxTimeoutSecForTesting sets cameraValidationMaxTimeoutSec for testing.
@@ -157,7 +156,7 @@ func runtimeServiceValidation(
 type orbslamService struct {
 	generic.Unimplemented
 	primarySensorName string
-	subAlgo           OrbslamAlgorithm
+	subAlgo           SubAlgo
 	slamProcess       pexec.ProcessManager
 	clientAlgo        pb.SLAMServiceClient
 	clientAlgoClose   func() error
@@ -482,8 +481,8 @@ func New(ctx context.Context,
 		return nil, errors.Wrap(err, "configuring camera error")
 	}
 
-	subAlgo := OrbslamAlgorithm(svcConfig.ConfigParams["mode"])
-	validAlgos := []OrbslamAlgorithm{Mono, Rgbd}
+	subAlgo := SubAlgo(svcConfig.ConfigParams["mode"])
+	validAlgos := []SubAlgo{Mono, Rgbd}
 	if !slices.Contains(validAlgos, subAlgo) {
 		return nil, errors.Errorf("getting data with specified algorithm %v, and desired mode %v",
 			config.Model.Name, svcConfig.ConfigParams["mode"])
@@ -871,7 +870,7 @@ func (orbSvc *orbslamService) getSimultaneousColorAndDepth(
 
 // Creates a file for camera data with the specified sensor name and timestamp written into the filename.
 // For RGBD cameras, two filenames are created with the same timestamp in different directories.
-func createTimestampFilenames(dataDirectory, primarySensorName, fileType string, subAlgo OrbslamAlgorithm) ([]string, error) {
+func createTimestampFilenames(dataDirectory, primarySensorName, fileType string, subAlgo SubAlgo) ([]string, error) {
 	timeStamp := time.Now()
 	dataDir := filepath.Join(dataDirectory, "data")
 	rbgDataDir := filepath.Join(dataDir, "rgb")

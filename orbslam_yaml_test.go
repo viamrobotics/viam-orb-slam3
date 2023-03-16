@@ -18,7 +18,7 @@ import (
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam/builtin"
 	slamConfig "go.viam.com/slam/config"
-	dataprocess "go.viam.com/slam/dataprocess"
+	"go.viam.com/slam/dataprocess"
 	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
 	"go.viam.com/utils"
