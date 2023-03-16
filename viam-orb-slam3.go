@@ -46,11 +46,13 @@ import (
 	"github.com/viamrobotics/viam-orb-slam3/internal/grpchelper"
 )
 
+
 var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
 	Model                         = resource.NewModel("viam", "slam", "orbslamv3")
 	BinaryLocation                = "orb_grpc_server"
+	supportedSubAlgos             = []SubAlgo{Mono, Rgbd}
 )
 
 const (
@@ -482,9 +484,8 @@ func New(ctx context.Context,
 	}
 
 	subAlgo := SubAlgo(svcConfig.ConfigParams["mode"])
-	validAlgos := []SubAlgo{Mono, Rgbd}
-	if !slices.Contains(validAlgos, subAlgo) {
-		return nil, errors.Errorf("getting data with specified algorithm %v, and desired mode %v",
+	if !slices.Contains(supportedSubAlgos, subAlgo) {
+		return nil, errors.Errorf("%v does not have a subAlgo %v",
 			config.Model.Name, svcConfig.ConfigParams["mode"])
 	}
 
