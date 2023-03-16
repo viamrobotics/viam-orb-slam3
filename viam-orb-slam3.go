@@ -483,9 +483,6 @@ func New(ctx context.Context,
 	}
 
 	modelName := string(config.Model.Name)
-	if !ok {
-		return nil, errors.Errorf("%v algorithm specified not in implemented list", modelName)
-	}
 
 	subAlgo := OrbslamAlgorithm(svcConfig.ConfigParams["mode"])
 	validAlgos := []OrbslamAlgorithm{Mono, Rgbd}

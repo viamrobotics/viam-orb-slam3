@@ -448,6 +448,9 @@ func TestGeneralNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
+	orignalBinaryLocation := viamorbslam3.BinaryLocation
+	viamorbslam3.SetBinaryLocationForTesting("true")
+	defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 
 	t.Run("New slam service with no camera", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
@@ -493,6 +496,9 @@ func TestORBSLAMNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
+	orignalBinaryLocation := viamorbslam3.BinaryLocation
+	viamorbslam3.SetBinaryLocationForTesting("true")
+	defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 
 	t.Run("New orbslamv3 service with good camera in slam mode rgbd", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
@@ -656,6 +662,9 @@ func TestORBSLAMDataProcess(t *testing.T) {
 	logger, obs := golog.NewObservedTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
+	orignalBinaryLocation := viamorbslam3.BinaryLocation
+	viamorbslam3.SetBinaryLocationForTesting("true")
+	defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 
 	grpcServer, port := setupTestGRPCServer(t)
 	attrCfg := &slamConfig.AttrConfig{
@@ -732,6 +741,9 @@ func TestEndpointFailures(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
+	orignalBinaryLocation := viamorbslam3.BinaryLocation
+	viamorbslam3.SetBinaryLocationForTesting("true")
+	defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 
 	grpcServer, port := setupTestGRPCServer(t)
 	attrCfg := &slamConfig.AttrConfig{
@@ -795,16 +807,12 @@ func TestSLAMProcessSuccess(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
+	orignalBinaryLocation := viamorbslam3.BinaryLocation
+	viamorbslam3.SetBinaryLocationForTesting("true")
+	defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 
 	t.Run("Test online SLAM process with default parameters", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
-		orignalBinaryLocation := viamorbslam3.BinaryLocation
-		// This test executes the binary but we are not running
-		// integration tests so we cannot be sure that orb_grpc_server
-		// is installed. However, we can use the program 'true'
-		// to emulate testing the argument passing and execution
-		viamorbslam3.SetBinaryLocationForTesting("true")
-		defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"good_color_camera", "good_depth_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd", "test_param": "viam"},
@@ -892,6 +900,9 @@ func TestSLAMProcessFail(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
+	orignalBinaryLocation := viamorbslam3.BinaryLocation
+	viamorbslam3.SetBinaryLocationForTesting("true")
+	defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 
 	grpcServer, port := setupTestGRPCServer(t)
 	attrCfg := &slamConfig.AttrConfig{

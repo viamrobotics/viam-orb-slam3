@@ -14,6 +14,7 @@ import (
 
 	"github.com/edaniels/golog"
 	"github.com/pkg/errors"
+	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam/builtin"
 	slamConfig "go.viam.com/slam/config"
@@ -63,6 +64,9 @@ func TestOrbslamYAMLNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
+	orignalBinaryLocation := viamorbslam3.BinaryLocation
+	viamorbslam3.SetBinaryLocationForTesting("true")
+	defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 
 	useLiveData := true
 	dataRateMs := 200
