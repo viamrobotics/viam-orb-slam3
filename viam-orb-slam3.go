@@ -123,7 +123,7 @@ func runtimeServiceValidation(
 
 	for {
 		var currPaths []string
-		currPaths, err = orbSvc.getAndSaveDataSparse(ctx, cams)
+		currPaths, err = orbSvc.getAndSaveData(ctx, cams)
 		paths = append(paths, currPaths...)
 
 		if err == nil {
@@ -648,7 +648,7 @@ func (orbSvc *orbslamService) StartDataProcess(
 				}
 				goutils.PanicCapturingGo(func() {
 					defer orbSvc.activeBackgroundWorkers.Done()
-					if _, err := orbSvc.getAndSaveDataSparse(cancelCtx, cams); err != nil {
+					if _, err := orbSvc.getAndSaveData(cancelCtx, cams); err != nil {
 						orbSvc.logger.Warn(err)
 					}
 					if c != nil {
@@ -769,9 +769,9 @@ func (orbSvc *orbslamService) StopSLAMProcess() error {
 	return nil
 }
 
-// getAndSaveDataSparse implements the data extraction for sparse algos and saving to the directory path (data subfolder) specified in
+// getAndSaveData implements the data extraction for saving to the directory path (data subfolder) specified in
 // the config. It returns the full filepath for each file saved along with any error associated with the data creation or saving.
-func (orbSvc *orbslamService) getAndSaveDataSparse(
+func (orbSvc *orbslamService) getAndSaveData(
 	ctx context.Context,
 	cams []camera.Camera,
 ) ([]string, error) {
