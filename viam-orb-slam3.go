@@ -46,7 +46,6 @@ import (
 	"github.com/viamrobotics/viam-orb-slam3/internal/grpchelper"
 )
 
-
 var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
@@ -203,12 +202,8 @@ func configureCameras(ctx context.Context,
 		}
 		proj, err := cam.Projector(ctx)
 		if err != nil {
-			if len(svcConfig.Sensors) == 1 {
-				logger.Debug("No camera features found, please make sure to specify both a color and depth camera or a rgbd camera")
-			} else {
-				return "", nil, errors.Wrap(err,
-					"Unable to get camera features for first camera, make sure the color camera is listed first")
-			}
+			return "", nil, errors.Wrap(err,
+				"Unable to get camera features for first camera, make sure the color camera is listed first")
 		} else {
 			intrinsics, ok := proj.(*transform.PinholeCameraIntrinsics)
 			if !ok {

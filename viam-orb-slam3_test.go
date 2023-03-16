@@ -241,15 +241,18 @@ func setupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 				), nil
 			}
 			deps[camera.Named(sensor)] = cam
-		case "bad_camera":
+		case "bad_camera_no_video":
 			cam.StreamFunc = func(ctx context.Context, errHandlers ...gostream.ErrorHandler) (gostream.VideoStream, error) {
-				return nil, errors.New("bad_camera")
+				return nil, errors.New("bad_camera_no_video")
 			}
 			cam.NextPointCloudFunc = func(ctx context.Context) (pointcloud.PointCloud, error) {
 				return nil, errors.New("camera not lidar")
 			}
 			cam.ProjectorFunc = func(ctx context.Context) (transform.Projector, error) {
-				return nil, transform.NewNoIntrinsicsError("")
+				return projA, nil
+			}
+			cam.PropertiesFunc = func(ctx context.Context) (camera.Properties, error) {
+				return camera.Properties{IntrinsicParams: intrinsicsA, DistortionParams: distortionsA}, nil
 			}
 			deps[camera.Named(sensor)] = cam
 		case "bad_camera_intrinsics":
@@ -607,7 +610,7 @@ func TestORBSLAMNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service with camera that errors during call to Next", func(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
-			Sensors:       []string{"bad_camera"},
+			Sensors:       []string{"bad_camera_no_video"},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,
 			DataRateMsec:  validDataRateMS,
@@ -646,8 +649,8 @@ func TestORBSLAMNew(t *testing.T) {
 
 		// Create slam service
 		_, err := createSLAMService(t, attrCfg, logger, false, false)
-		test.That(t, err, test.ShouldBeError,
-			errors.New("runtime slam service error: error getting data in desired mode: lidar not camera"))
+		test.That(t, err.Error(), test.ShouldContainSubstring,
+			"configuring camera error:")
 	})
 	closeOutSLAMService(t, name)
 }
