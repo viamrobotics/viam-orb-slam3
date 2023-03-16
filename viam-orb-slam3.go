@@ -482,13 +482,11 @@ func New(ctx context.Context,
 		return nil, errors.Wrap(err, "configuring camera error")
 	}
 
-	modelName := string(config.Model.Name)
-
 	subAlgo := OrbslamAlgorithm(svcConfig.ConfigParams["mode"])
 	validAlgos := []OrbslamAlgorithm{Mono, Rgbd}
 	if !slices.Contains(validAlgos, subAlgo) {
 		return nil, errors.Errorf("getting data with specified algorithm %v, and desired mode %v",
-			modelName, svcConfig.ConfigParams["mode"])
+			config.Model.Name, svcConfig.ConfigParams["mode"])
 	}
 
 	if err = slamConfig.SetupDirectories(svcConfig.DataDirectory, logger); err != nil {

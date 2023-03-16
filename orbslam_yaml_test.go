@@ -64,9 +64,9 @@ func TestOrbslamYAMLNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
-	orignalBinaryLocation := viamorbslam3.BinaryLocation
+	originalBinaryLocation := viamorbslam3.BinaryLocation
 	viamorbslam3.SetBinaryLocationForTesting("true")
-	defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
+	defer viamorbslam3.SetBinaryLocationForTesting(originalBinaryLocation)
 
 	useLiveData := true
 	dataRateMs := 200
