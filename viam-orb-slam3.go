@@ -41,6 +41,7 @@ import (
 	goutils "go.viam.com/utils"
 	"go.viam.com/utils/pexec"
 	"go.viam.com/utils/protoutils"
+	"golang.org/x/exp/slices"
 
 	"github.com/viamrobotics/viam-orb-slam3/internal/grpchelper"
 )
@@ -49,7 +50,7 @@ var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
 	Model                         = resource.NewModel("viam", "slam", "orbslamv3")
-    SlamMode = map[string]slam.Mode{"mono":slam.Mono, "rgbd": slam.Rgbd}
+	BinaryLocation                = "orb_grpc_server"
 )
 
 const (
@@ -60,8 +61,15 @@ const (
 	// time format for the slam service.
 	opTimeoutErrorMessage = "bad scan: OpTimeout"
 	localhost0            = "localhost:0"
-    AlgoName = "orbslamv3"
-    BinaryLocation = "orb_grpc_server"
+	AlgoName              = "orbslamv3"
+)
+
+// This gets created from the subAlgo parameter
+type OrbslamAlgorithm string
+
+const (
+	Mono OrbslamAlgorithm = "mono"
+	Rgbd OrbslamAlgorithm = "rgbd"
 )
 
 // SetCameraValidationMaxTimeoutSecForTesting sets cameraValidationMaxTimeoutSec for testing.
@@ -72,6 +80,11 @@ func SetCameraValidationMaxTimeoutSecForTesting(val int) {
 // SetDialMaxTimeoutSecForTesting sets dialMaxTimeoutSec for testing.
 func SetDialMaxTimeoutSecForTesting(val int) {
 	dialMaxTimeoutSec = val
+}
+
+// SetBinaryLocationForTesting sets BinaryLocation for testing
+func SetBinaryLocationForTesting(val string) {
+	BinaryLocation = val
 }
 
 func init() {
@@ -144,7 +157,7 @@ func runtimeServiceValidation(
 type orbslamService struct {
 	generic.Unimplemented
 	primarySensorName string
-	subAlgo           slam.Mode
+	subAlgo           OrbslamAlgorithm
 	slamProcess       pexec.ProcessManager
 	clientAlgo        pb.SLAMServiceClient
 	clientAlgoClose   func() error
@@ -474,8 +487,9 @@ func New(ctx context.Context,
 		return nil, errors.Errorf("%v algorithm specified not in implemented list", modelName)
 	}
 
-	subAlgo, ok := SlamMode[svcConfig.ConfigParams["mode"]]
-	if !ok {
+	subAlgo := OrbslamAlgorithm(svcConfig.ConfigParams["mode"])
+	validAlgos := []OrbslamAlgorithm{Mono, Rgbd}
+	if !slices.Contains(validAlgos, subAlgo) {
 		return nil, errors.Errorf("getting data with specified algorithm %v, and desired mode %v",
 			modelName, svcConfig.ConfigParams["mode"])
 	}
@@ -484,20 +498,18 @@ func New(ctx context.Context,
 		return nil, errors.Wrap(err, "unable to setup working directories")
 	}
 
-	if subAlgo == slam.Rgbd || subAlgo == slam.Mono {
-		var directoryNames []string
-		if subAlgo == slam.Rgbd {
-			directoryNames = []string{"rgb", "depth"}
-		} else if subAlgo == slam.Mono {
-			directoryNames = []string{"rgb"}
-		}
-		for _, directoryName := range directoryNames {
-			directoryPath := filepath.Join(svcConfig.DataDirectory, "data", directoryName)
-			if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
-				logger.Warnf("%v directory does not exist", directoryPath)
-				if err := os.Mkdir(directoryPath, os.ModePerm); err != nil {
-					return nil, errors.Errorf("issue creating directory at %v: %v", directoryPath, err)
-				}
+	var directoryNames []string
+	if subAlgo == Rgbd {
+		directoryNames = []string{"rgb", "depth"}
+	} else if subAlgo == Mono {
+		directoryNames = []string{"rgb"}
+	}
+	for _, directoryName := range directoryNames {
+		directoryPath := filepath.Join(svcConfig.DataDirectory, "data", directoryName)
+		if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
+			logger.Warnf("%v directory does not exist", directoryPath)
+			if err := os.Mkdir(directoryPath, os.ModePerm); err != nil {
+				return nil, errors.Errorf("issue creating directory at %v: %v", directoryPath, err)
 			}
 		}
 	}
@@ -767,7 +779,7 @@ func (orbSvc *orbslamService) getAndSaveDataSparse(
 	defer span.End()
 
 	switch orbSvc.subAlgo {
-	case slam.Mono:
+	case Mono:
 		if len(cams) != 1 {
 			return nil, errors.Errorf("expected 1 camera for mono slam, found %v", len(cams))
 		}
@@ -790,7 +802,7 @@ func (orbSvc *orbslamService) getAndSaveDataSparse(
 
 		filename := filenames[0]
 		return []string{filename}, dataprocess.WriteBytesToFile(image, filename)
-	case slam.Rgbd:
+	case Rgbd:
 		if len(cams) != 2 {
 			return nil, errors.Errorf("expected 2 cameras for Rgbd slam, found %v", len(cams))
 		}
@@ -864,20 +876,17 @@ func (orbSvc *orbslamService) getSimultaneousColorAndDepth(
 
 // Creates a file for camera data with the specified sensor name and timestamp written into the filename.
 // For RGBD cameras, two filenames are created with the same timestamp in different directories.
-func createTimestampFilenames(dataDirectory, primarySensorName, fileType string, subAlgo slam.Mode) ([]string, error) {
+func createTimestampFilenames(dataDirectory, primarySensorName, fileType string, subAlgo OrbslamAlgorithm) ([]string, error) {
 	timeStamp := time.Now()
 	dataDir := filepath.Join(dataDirectory, "data")
 	rbgDataDir := filepath.Join(dataDir, "rgb")
 	depthDataDir := filepath.Join(dataDir, "depth")
 
 	switch subAlgo {
-	case slam.Dim2d:
-		filename := dataprocess.CreateTimestampFilename(dataDir, primarySensorName, fileType, timeStamp)
-		return []string{filename}, nil
-	case slam.Mono:
+	case Mono:
 		rgbFilename := dataprocess.CreateTimestampFilename(rbgDataDir, primarySensorName, fileType, timeStamp)
 		return []string{rgbFilename}, nil
-	case slam.Rgbd:
+	case Rgbd:
 		rgbFilename := dataprocess.CreateTimestampFilename(rbgDataDir, primarySensorName, fileType, timeStamp)
 		depthFilename := dataprocess.CreateTimestampFilename(depthDataDir, primarySensorName, fileType, timeStamp)
 		return []string{rgbFilename, depthFilename}, nil

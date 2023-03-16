@@ -429,6 +429,7 @@ func createSLAMService(
 
 	viamorbslam3.SetCameraValidationMaxTimeoutSecForTesting(1)
 	viamorbslam3.SetDialMaxTimeoutSecForTesting(1)
+	viamorbslam3.SetBinaryLocationForTesting("true")
 
 	svc, err := viamorbslam3.New(ctx, deps, cfgService, logger, bufferSLAMProcessLogs)
 
@@ -814,7 +815,6 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		processCfg := slamSvc.GetSLAMProcessConfig()
 		cmd := append([]string{processCfg.Name}, processCfg.Args...)
 
-
 		cmdResult := [][]string{
 			{viamorbslam3.BinaryLocation},
 			{"-sensors=good_color_camera"},
@@ -856,9 +856,8 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		processCfg := slamSvc.GetSLAMProcessConfig()
 		cmd := append([]string{processCfg.Name}, processCfg.Args...)
 
-        logger.Warn(slam.SLAMLibraries["orbslamv3"].BinaryLocation)
 		cmdResult := [][]string{
-			{slam.SLAMLibraries["orbslamv3"].BinaryLocation},
+			{viamorbslam3.BinaryLocation},
 			{"-sensors="},
 			{"-config_param={mode=mono,test_param=viam}", "-config_param={test_param=viam,mode=mono}"},
 			{"-data_rate_ms=200"},
