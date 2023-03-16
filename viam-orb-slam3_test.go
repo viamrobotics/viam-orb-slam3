@@ -41,23 +41,24 @@ import (
 	"go.viam.com/utils/artifact"
 	"google.golang.org/grpc"
 
-	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 
 const (
-	validDataRateMS = 200
-	dataBufferSize  = 4
+	validDataRateMS            = 200
+	numCartographerPointClouds = 15
+	dataBufferSize             = 4
 )
 
 var (
-	orbslamIntCameraMutex             sync.Mutex
-	orbslamIntCameraReleaseImagesChan = make(chan int, 2)
-	orbslamIntWebcamReleaseImageChan  = make(chan int, 1)
-	orbslamIntSynchronizeCamerasChan  = make(chan int)
-	validMapRate                      = 200
-	_true                             = true
-	_false                            = false
+	orbslamIntCameraMutex                     sync.Mutex
+	orbslamIntCameraReleaseImagesChan         = make(chan int, 2)
+	orbslamIntWebcamReleaseImageChan          = make(chan int, 1)
+	orbslamIntSynchronizeCamerasChan          = make(chan int)
+	cartographerIntLidarReleasePointCloudChan = make(chan int, 1)
+	validMapRate                              = 200
+	_true                                     = true
+	_false                                    = false
 )
 
 func getNumOrbslamImages(mode slam.Mode) int {
