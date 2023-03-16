@@ -158,17 +158,11 @@ func setupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 		cam := &inject.Camera{}
 		switch sensor {
 		case "good_lidar":
-			cam.NextPointCloudFunc = func(ctx context.Context) (pointcloud.PointCloud, error) {
-				return pointcloud.New(), nil
-			}
 			cam.StreamFunc = func(ctx context.Context, errHandlers ...gostream.ErrorHandler) (gostream.VideoStream, error) {
 				return nil, errors.New("lidar not camera")
 			}
 			cam.ProjectorFunc = func(ctx context.Context) (transform.Projector, error) {
 				return nil, transform.NewNoIntrinsicsError("")
-			}
-			cam.PropertiesFunc = func(ctx context.Context) (camera.Properties, error) {
-				return camera.Properties{}, nil
 			}
 			deps[camera.Named(sensor)] = cam
 		case "good_camera":
