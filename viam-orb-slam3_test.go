@@ -799,6 +799,10 @@ func TestSLAMProcessSuccess(t *testing.T) {
 	t.Run("Test online SLAM process with default parameters", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
 		orignalBinaryLocation := viamorbslam3.BinaryLocation
+        // This test executes the binary but we are not running
+        // integration tests so we cannot be sure that orb_grpc_server
+        // is installed. However, we can use the program 'true'
+        // to emulate testing the argument passing and execution
 		viamorbslam3.SetBinaryLocationForTesting("true")
 		defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
 		attrCfg := &slamConfig.AttrConfig{
@@ -880,6 +884,52 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		grpcServer.Stop()
 		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 	})
+
+	closeOutSLAMService(t, name)
+}
+
+func TestSLAMProcessFail(t *testing.T) {
+	logger := golog.NewTestLogger(t)
+	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	test.That(t, err, test.ShouldBeNil)
+
+	grpcServer, port := setupTestGRPCServer(t)
+	attrCfg := &slamConfig.AttrConfig{
+		Sensors:       []string{"good_color_camera"},
+		ConfigParams:  map[string]string{"mode": "mono", "test_param": "viam"},
+		DataDirectory: name,
+		MapRateSec:    &validMapRate,
+		DataRateMsec:  validDataRateMS,
+		Port:          "localhost:" + strconv.Itoa(port),
+		UseLiveData:   &_true,
+	}
+
+	// Create slam service
+	svc, err := createSLAMService(t, attrCfg, logger, false, true)
+	test.That(t, err, test.ShouldBeNil)
+
+	slamSvc := svc.(testhelper.Service)
+
+	t.Run("Run SLAM process that errors out due to invalid binary location", func(t *testing.T) {
+		cancelCtx, cancelFunc := context.WithCancel(context.Background())
+
+		orignalBinaryLocation := viamorbslam3.BinaryLocation
+        // This test ensures that we get the correct error if the user does 
+        // not have the correct binary installed. This sets the binary path to some 
+        // unused value and then tests to ensure that creating a SLAM process fails
+		viamorbslam3.SetBinaryLocationForTesting("fail_this_binary_does_not_exist")
+		defer viamorbslam3.SetBinaryLocationForTesting(orignalBinaryLocation)
+		err := slamSvc.StartSLAMProcess(cancelCtx)
+		test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "problem adding slam process:")
+
+		cancelFunc()
+
+		err = slamSvc.StopSLAMProcess()
+		test.That(t, err, test.ShouldBeNil)
+	})
+
+	grpcServer.Stop()
+	test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 
 	closeOutSLAMService(t, name)
 }
