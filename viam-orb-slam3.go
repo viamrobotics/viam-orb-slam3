@@ -50,9 +50,7 @@ var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
 	// Model specifies the unique resource-triple across the rdk.
-	Model = resource.NewModel("viam", "slam", "orbslamv3")
-	// BinaryLocation is the name of the executable that this program wraps.
-	BinaryLocation    = "orb_grpc_server"
+	Model             = resource.NewModel("viam", "slam", "orbslamv3")
 	supportedSubAlgos = []SubAlgo{Mono, Rgbd}
 )
 
@@ -64,6 +62,8 @@ const (
 	// time format for the slam service.
 	opTimeoutErrorMessage = "bad scan: OpTimeout"
 	localhost0            = "localhost:0"
+	// DefaultExecutableName is what this program expects to call to start the grpc server.
+	DefaultExecutableName = "orb_grpc_server"
 )
 
 // SubAlgo defines the ORB_SLAM3 specific algorithms that we support.
@@ -86,15 +86,10 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 	dialMaxTimeoutSec = val
 }
 
-// SetBinaryLocationForTesting sets BinaryLocation for testing.
-func SetBinaryLocationForTesting(val string) {
-	BinaryLocation = val
-}
-
 func init() {
 	registry.RegisterService(slam.Subtype, Model, registry.Service{
 		Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
-			return New(ctx, deps, c, logger, false)
+			return New(ctx, deps, c, logger, false, DefaultExecutableName)
 		},
 	})
 	config.RegisterServiceAttributeMapConverter(slam.Subtype, Model, func(attributes config.AttributeMap) (interface{}, error) {
@@ -162,6 +157,7 @@ type orbslamService struct {
 	generic.Unimplemented
 	primarySensorName string
 	subAlgo           SubAlgo
+	executableName    string // by default: DefaultExecutableName
 	slamProcess       pexec.ProcessManager
 	clientAlgo        pb.SLAMServiceClient
 	clientAlgoClose   func() error
@@ -486,6 +482,7 @@ func New(ctx context.Context,
 	config config.Service,
 	logger golog.Logger,
 	bufferSLAMProcessLogs bool,
+	executableName string,
 ) (slam.Service, error) {
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()
@@ -542,6 +539,7 @@ func New(ctx context.Context,
 	orbSvc := &orbslamService{
 		primarySensorName:     primarySensorName,
 		subAlgo:               subAlgo,
+		executableName:        executableName,
 		slamProcess:           pexec.NewProcessManager(logger),
 		configParams:          svcConfig.ConfigParams,
 		dataDirectory:         svcConfig.DataDirectory,
@@ -687,7 +685,7 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 
 	return pexec.ProcessConfig{
 		ID:      "slam_orbslamv3",
-		Name:    BinaryLocation,
+		Name:    orbSvc.executableName,
 		Args:    args,
 		Log:     true,
 		OneShot: false,

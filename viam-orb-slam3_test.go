@@ -43,8 +43,9 @@ import (
 )
 
 const (
-	validDataRateMS = 200
-	dataBufferSize  = 4
+	validDataRateMS    = 200
+	dataBufferSize     = 4
+	testExecutableName = "true" // the program "true", not the boolean value
 )
 
 var (
@@ -409,6 +410,7 @@ func createSLAMService(
 	//nolint:unparam
 	bufferSLAMProcessLogs bool,
 	success bool,
+	executableName string,
 ) (slam.Service, error) {
 	t.Helper()
 
@@ -427,7 +429,7 @@ func createSLAMService(
 	viamorbslam3.SetCameraValidationMaxTimeoutSecForTesting(1)
 	viamorbslam3.SetDialMaxTimeoutSecForTesting(1)
 
-	svc, err := viamorbslam3.New(ctx, deps, cfgService, logger, bufferSLAMProcessLogs)
+	svc, err := viamorbslam3.New(ctx, deps, cfgService, logger, bufferSLAMProcessLogs, executableName)
 
 	if success {
 		if err != nil {
@@ -445,9 +447,6 @@ func TestGeneralNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
-	originalBinaryLocation := viamorbslam3.BinaryLocation
-	viamorbslam3.SetBinaryLocationForTesting("true")
-	defer viamorbslam3.SetBinaryLocationForTesting(originalBinaryLocation)
 
 	t.Run("New slam service with no camera", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
@@ -463,7 +462,7 @@ func TestGeneralNew(t *testing.T) {
 		// Create slam service
 
 		test.That(t, err, test.ShouldBeNil)
-		svc, err := createSLAMService(t, attrCfg, logger, false, true)
+		svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -480,7 +479,7 @@ func TestGeneralNew(t *testing.T) {
 		}
 
 		// Create slam service
-		_, err := createSLAMService(t, attrCfg, logger, false, false)
+		_, err := createSLAMService(t, attrCfg, logger, false, false, testExecutableName)
 		test.That(t, err, test.ShouldBeError,
 			errors.New("configuring camera error: error getting camera gibberish for slam service: "+
 				"\"gibberish\" missing from dependencies"))
@@ -493,9 +492,6 @@ func TestORBSLAMNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
-	originalBinaryLocation := viamorbslam3.BinaryLocation
-	viamorbslam3.SetBinaryLocationForTesting("true")
-	defer viamorbslam3.SetBinaryLocationForTesting(originalBinaryLocation)
 
 	t.Run("New orbslamv3 service with good camera in slam mode rgbd", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
@@ -509,7 +505,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		svc, err := createSLAMService(t, attrCfg, logger, false, true)
+		svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -526,7 +522,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		_, err = createSLAMService(t, attrCfg, logger, false, false)
+		_, err = createSLAMService(t, attrCfg, logger, false, false, testExecutableName)
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			errors.Errorf("expected 2 cameras for Rgbd slam, found %v", len(attrCfg.Sensors)).Error())
 	})
@@ -543,7 +539,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		svc, err := createSLAMService(t, attrCfg, logger, false, true)
+		svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 		expectedError := errors.New("configuring camera error: error getting distortion_parameters for slam " +
 			"service, only BrownConrady distortion parameters are supported").Error()
 		test.That(t, err.Error(), test.ShouldContainSubstring, expectedError)
@@ -565,7 +561,7 @@ func TestORBSLAMNew(t *testing.T) {
 
 		// Create slam service
 		logger := golog.NewTestLogger(t)
-		svc, err := createSLAMService(t, attrCfg, logger, false, true)
+		svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 		expectedError := errors.New("configuring camera error: error getting camera properties for slam " +
 			"service: somehow couldn't get properties").Error()
 		test.That(t, err.Error(), test.ShouldContainSubstring, expectedError)
@@ -584,7 +580,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		_, err = createSLAMService(t, attrCfg, logger, false, false)
+		_, err = createSLAMService(t, attrCfg, logger, false, false, testExecutableName)
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			errors.New("Unable to get camera features for first camera, make sure the color camera is listed first").Error())
 	})
@@ -601,7 +597,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		svc, err := createSLAMService(t, attrCfg, logger, false, true)
+		svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -618,7 +614,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		_, err := createSLAMService(t, attrCfg, logger, false, false)
+		_, err := createSLAMService(t, attrCfg, logger, false, false, testExecutableName)
 		test.That(t, err, test.ShouldBeError,
 			errors.Errorf("runtime slam service error: "+
 				"error getting data in desired mode: %v", attrCfg.Sensors[0]))
@@ -633,7 +629,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		_, err := createSLAMService(t, attrCfg, logger, false, false)
+		_, err := createSLAMService(t, attrCfg, logger, false, false, testExecutableName)
 
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			transform.NewNoIntrinsicsError(fmt.Sprintf("Invalid size (%#v, %#v)", 0, 0)).Error())
@@ -648,7 +644,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		_, err := createSLAMService(t, attrCfg, logger, false, false)
+		_, err := createSLAMService(t, attrCfg, logger, false, false, testExecutableName)
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			"configuring camera error:")
 	})
@@ -659,9 +655,6 @@ func TestORBSLAMDataProcess(t *testing.T) {
 	logger, obs := golog.NewObservedTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
-	originalBinaryLocation := viamorbslam3.BinaryLocation
-	viamorbslam3.SetBinaryLocationForTesting("true")
-	defer viamorbslam3.SetBinaryLocationForTesting(originalBinaryLocation)
 
 	grpcServer, port := setupTestGRPCServer(t)
 	attrCfg := &slamConfig.AttrConfig{
@@ -674,7 +667,7 @@ func TestORBSLAMDataProcess(t *testing.T) {
 	}
 
 	// Create slam service
-	svc, err := createSLAMService(t, attrCfg, logger, false, true)
+	svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
 	grpcServer.Stop()
@@ -738,9 +731,6 @@ func TestEndpointFailures(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
-	originalBinaryLocation := viamorbslam3.BinaryLocation
-	viamorbslam3.SetBinaryLocationForTesting("true")
-	defer viamorbslam3.SetBinaryLocationForTesting(originalBinaryLocation)
 
 	grpcServer, port := setupTestGRPCServer(t)
 	attrCfg := &slamConfig.AttrConfig{
@@ -754,7 +744,7 @@ func TestEndpointFailures(t *testing.T) {
 	}
 
 	// Create slam service
-	svc, err := createSLAMService(t, attrCfg, logger, false, true)
+	svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
 	p, err := svc.Position(context.Background(), "hi", map[string]interface{}{})
@@ -804,9 +794,6 @@ func TestSLAMProcessSuccess(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
-	originalBinaryLocation := viamorbslam3.BinaryLocation
-	viamorbslam3.SetBinaryLocationForTesting("true")
-	defer viamorbslam3.SetBinaryLocationForTesting(originalBinaryLocation)
 
 	t.Run("Test online SLAM process with default parameters", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
@@ -819,7 +806,7 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		}
 
 		// Create slam service
-		svc, err := createSLAMService(t, attrCfg, logger, false, true)
+		svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		orbSvc := svc.(testhelper.Service)
@@ -827,7 +814,7 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		cmd := append([]string{processCfg.Name}, processCfg.Args...)
 
 		cmdResult := [][]string{
-			{viamorbslam3.BinaryLocation},
+			{testExecutableName},
 			{"-sensors=good_color_camera"},
 			{"-config_param={test_param=viam,mode=rgbd}", "-config_param={mode=rgbd,test_param=viam}"},
 			{"-data_rate_ms=200"},
@@ -860,7 +847,7 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		}
 
 		// Create slam service
-		svc, err := createSLAMService(t, attrCfg, logger, false, true)
+		svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		orbSvc := svc.(testhelper.Service)
@@ -868,7 +855,7 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		cmd := append([]string{processCfg.Name}, processCfg.Args...)
 
 		cmdResult := [][]string{
-			{viamorbslam3.BinaryLocation},
+			{testExecutableName},
 			{"-sensors="},
 			{"-config_param={mode=mono,test_param=viam}", "-config_param={test_param=viam,mode=mono}"},
 			{"-data_rate_ms=200"},
@@ -897,9 +884,6 @@ func TestSLAMProcessFail(t *testing.T) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
-	originalBinaryLocation := viamorbslam3.BinaryLocation
-	viamorbslam3.SetBinaryLocationForTesting("true")
-	defer viamorbslam3.SetBinaryLocationForTesting(originalBinaryLocation)
 
 	grpcServer, port := setupTestGRPCServer(t)
 	attrCfg := &slamConfig.AttrConfig{
@@ -912,28 +896,15 @@ func TestSLAMProcessFail(t *testing.T) {
 		UseLiveData:   &_true,
 	}
 
-	// Create slam service
-	svc, err := createSLAMService(t, attrCfg, logger, false, true)
+	// Create slam service to prove that the defaults succeed
+	svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
-	orbSvc := svc.(testhelper.Service)
-
-	t.Run("Run SLAM process that errors out due to invalid binary location", func(t *testing.T) {
-		cancelCtx, cancelFunc := context.WithCancel(context.Background())
-
-		originalBinaryLocation := viamorbslam3.BinaryLocation
+	t.Run("Run SLAM process that errors out due to invalid executable name", func(t *testing.T) {
 		// This test ensures that we get the correct error if the user does
-		// not have the correct binary installed. This sets the binary path to some
-		// unused value and then tests to ensure that creating a SLAM process fails
-		viamorbslam3.SetBinaryLocationForTesting("fail_this_binary_does_not_exist")
-		defer viamorbslam3.SetBinaryLocationForTesting(originalBinaryLocation)
-		err := orbSvc.StartSLAMProcess(cancelCtx)
-		test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "problem adding slam process:")
-
-		cancelFunc()
-
-		err = orbSvc.StopSLAMProcess()
-		test.That(t, err, test.ShouldBeNil)
+		// not have the correct binary installed.
+		_, err := createSLAMService(t, attrCfg, logger, false, true, "fail_this_binary_does_not_exist")
+		test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "executable file not found in $PATH")
 	})
 
 	grpcServer.Stop()
