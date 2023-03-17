@@ -17,18 +17,16 @@ import (
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam/builtin"
 	slamConfig "go.viam.com/slam/config"
+	"go.viam.com/slam/dataprocess"
 	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
 	"go.viam.com/utils"
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	yamlFilePrefixBytes = "%YAML:1.0\n"
-	slamTimeFormat      = "2006-01-02T15:04:05.0000Z"
-)
+const yamlFilePrefixBytes = "%YAML:1.0\n"
 
-// function to search a SLAM data dir for a .yaml file. returns the timestamp and filepath.
+// findLastYAML searches a SLAM data dir for a .yaml file. It returns the timestamp and file path.
 func findLastYAML(folderName string) (string, string, error) {
 	root := filepath.Join(folderName, "config")
 	yamlExt := ".yaml"
@@ -40,7 +38,7 @@ func findLastYAML(folderName string) (string, string, error) {
 			// check if the file uses our format and grab timestamp if it does
 			timestampLoc := strings.Index(entry.Name(), "_data_") + len("_data_")
 			if timestampLoc != -1+len("_data_") {
-				timestamp, err := time.Parse(slamTimeFormat, entry.Name()[timestampLoc:strings.Index(entry.Name(), yamlExt)])
+				timestamp, err := time.Parse(dataprocess.SlamTimeFormat, entry.Name()[timestampLoc:strings.Index(entry.Name(), yamlExt)])
 				if err != nil {
 					return errors.Wrap(err, "Unable to parse yaml")
 				}
@@ -58,7 +56,7 @@ func findLastYAML(folderName string) (string, string, error) {
 	if yamlTimestamp.IsZero() {
 		return "", "", errors.New("No yaml file found")
 	}
-	return yamlTimestamp.UTC().Format(slamTimeFormat), yamlPath, nil
+	return yamlTimestamp.UTC().Format(dataprocess.SlamTimeFormat), yamlPath, nil
 }
 
 func TestOrbslamYAMLNew(t *testing.T) {
@@ -66,7 +64,6 @@ func TestOrbslamYAMLNew(t *testing.T) {
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
-	createFakeSLAMLibraries()
 	useLiveData := true
 	dataRateMs := 200
 	attrCfgGood := &slamConfig.AttrConfig{
@@ -121,7 +118,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
 		attrCfgGood.Port = "localhost:" + strconv.Itoa(port)
 
-		svc, err := createSLAMService(t, attrCfgGood, "fake_orbslamv3", logger, false, true)
+		svc, err := createSLAMService(t, attrCfgGood, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -158,7 +155,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
 		attrCfgGood.Port = "localhost:" + strconv.Itoa(port)
 
-		svc, err := createSLAMService(t, attrCfgGood, "fake_orbslamv3", logger, false, true)
+		svc, err := createSLAMService(t, attrCfgGood, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -184,7 +181,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
 		attrCfgGoodHighDataRateMsec.Port = "localhost:" + strconv.Itoa(port)
 
-		svc, err := createSLAMService(t, attrCfgGoodHighDataRateMsec, "fake_orbslamv3", logger, false, true)
+		svc, err := createSLAMService(t, attrCfgGoodHighDataRateMsec, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -210,7 +207,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service with camera that errors from bad intrinsics", func(t *testing.T) {
 		// Create slam service
-		_, err := createSLAMService(t, attrCfgBadCam, "fake_orbslamv3", logger, false, false)
+		_, err := createSLAMService(t, attrCfgBadCam, logger, false, false, testExecutableName)
 
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			transform.NewNoIntrinsicsError(fmt.Sprintf("Invalid size (%#v, %#v)", 0, 0)).Error())
@@ -234,7 +231,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 			UseLiveData:   &useLiveData,
 		}
 		// Create slam service
-		_, err := createSLAMService(t, attrCfgBadParam1, "fake_orbslamv3", logger, false, false)
+		_, err := createSLAMService(t, attrCfgBadParam1, logger, false, false, testExecutableName)
 		test.That(t, err.Error(), test.ShouldContainSubstring, "Parameter orb_n_features has an invalid definition")
 
 		attrCfgBadParam2 := &slamConfig.AttrConfig{
@@ -252,7 +249,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 			Port:          "localhost:4445",
 			UseLiveData:   &useLiveData,
 		}
-		_, err = createSLAMService(t, attrCfgBadParam2, "fake_orbslamv3", logger, false, false)
+		_, err = createSLAMService(t, attrCfgBadParam2, logger, false, false, testExecutableName)
 
 		test.That(t, err.Error(), test.ShouldContainSubstring, "Parameter orb_scale_factor has an invalid definition")
 	})
