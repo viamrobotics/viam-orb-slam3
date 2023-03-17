@@ -14,7 +14,6 @@ import (
 
 	"github.com/edaniels/golog"
 	"github.com/pkg/errors"
-	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam/builtin"
 	slamConfig "go.viam.com/slam/config"
@@ -23,6 +22,8 @@ import (
 	"go.viam.com/test"
 	"go.viam.com/utils"
 	"gopkg.in/yaml.v2"
+
+	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 )
 
 const yamlFilePrefixBytes = "%YAML:1.0\n"

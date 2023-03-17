@@ -20,7 +20,6 @@ import (
 	"github.com/edaniels/gostream"
 	"github.com/golang/geo/r3"
 	"github.com/pkg/errors"
-	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/config"
 	"go.viam.com/rdk/pointcloud"
@@ -39,6 +38,7 @@ import (
 	"go.viam.com/utils/artifact"
 	"google.golang.org/grpc"
 
+	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 

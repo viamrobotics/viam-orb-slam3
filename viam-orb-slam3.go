@@ -64,7 +64,7 @@ const (
 	localhost0            = "localhost:0"
 )
 
-// SubAlgo defines the ORB_SLAM3 specific algorithms that we support
+// SubAlgo defines the ORB_SLAM3 specific algorithms that we support.
 type SubAlgo string
 
 const (
@@ -82,7 +82,7 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 	dialMaxTimeoutSec = val
 }
 
-// SetBinaryLocationForTesting sets BinaryLocation for testing
+// SetBinaryLocationForTesting sets BinaryLocation for testing.
 func SetBinaryLocationForTesting(val string) {
 	BinaryLocation = val
 }
@@ -460,10 +460,10 @@ func (orbSvc *orbslamService) GetInternalStateStream(ctx context.Context, name s
 
 // New returns a new slam service for the given robot.
 func New(ctx context.Context,
-    deps registry.Dependencies, 
-    config config.Service, 
-    logger golog.Logger, 
-    bufferSLAMProcessLogs bool,
+	deps registry.Dependencies,
+	config config.Service,
+	logger golog.Logger,
+	bufferSLAMProcessLogs bool,
 ) (slam.Service, error) {
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()
@@ -574,13 +574,13 @@ func (orbSvc *orbslamService) Close() error {
 	orbSvc.cancelFunc()
 	if orbSvc.bufferSLAMProcessLogs {
 		if orbSvc.slamProcessLogReader != nil {
-			if err := slamSvc.slamProcessLogReader.Close(); err != nil {
+			if err := orbSvc.slamProcessLogReader.Close(); err != nil {
 				return errors.Wrap(err, "error occurred during closeout of slam log reader")
 			}
 			orbSvc.slamProcessLogReader.Close()
 		}
 		if orbSvc.slamProcessLogWriter != nil {
-			if err := slamSvc.slamProcessLogWriter.Close(); err != nil {
+			if err := orbSvc.slamProcessLogWriter.Close(); err != nil {
 				return errors.Wrap(err, "error occurred during closeout of slam log writer")
 			}
 		}
@@ -880,8 +880,6 @@ func createTimestampFilenames(dataDirectory, primarySensorName, fileType string,
 		rgbFilename := dataprocess.CreateTimestampFilename(rbgDataDir, primarySensorName, fileType, timeStamp)
 		depthFilename := dataprocess.CreateTimestampFilename(depthDataDir, primarySensorName, fileType, timeStamp)
 		return []string{rgbFilename, depthFilename}, nil
-	case slam.Dim3d:
-		return nil, errors.New("Dim3d is not implemented")
 	default:
 		return nil, errors.Errorf("Invalid sub algo: %v", subAlgo)
 	}
