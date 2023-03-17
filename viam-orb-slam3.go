@@ -499,7 +499,7 @@ func New(ctx context.Context,
 
 	subAlgo := SubAlgo(svcConfig.ConfigParams["mode"])
 	if !slices.Contains(supportedSubAlgos, subAlgo) {
-		return nil, errors.Errorf("%v does not have a subAlgo %v",
+		return nil, errors.Errorf("%v does not have a mode %v",
 			config.Model.Name, svcConfig.ConfigParams["mode"])
 	}
 
