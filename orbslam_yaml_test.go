@@ -202,6 +202,8 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		yamlData := bytes.Replace(yamlDataAll, []byte(yamlFilePrefixBytes), []byte(""), 1)
 		orbslam := builtin.ORBsettings{}
 		err = yaml.Unmarshal(yamlData, &orbslam)
+		test.That(t, err, test.ShouldBeNil)
+
 		// Even though the real fps is 0.1 Hz, we set it to 1
 		test.That(t, orbslam.FPSCamera, test.ShouldEqual, 1)
 	})
