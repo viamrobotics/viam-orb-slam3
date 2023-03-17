@@ -49,9 +49,11 @@ import (
 var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
-	Model                         = resource.NewModel("viam", "slam", "orbslamv3")
-	BinaryLocation                = "orb_grpc_server"
-	supportedSubAlgos             = []SubAlgo{Mono, Rgbd}
+	// Model specifies the unique resource-triple across the rdk.
+	Model = resource.NewModel("viam", "slam", "orbslamv3")
+	// BinaryLocation is the name of the executable that this program wraps.
+	BinaryLocation    = "orb_grpc_server"
+	supportedSubAlgos = []SubAlgo{Mono, Rgbd}
 )
 
 const (
@@ -68,7 +70,9 @@ const (
 type SubAlgo string
 
 const (
+	// Mono represents monocular vision (uses only one camera).
 	Mono SubAlgo = "mono"
+	// Rgbd uses a color camera and a depth camera for SLAM.
 	Rgbd SubAlgo = "rgbd"
 )
 
@@ -204,30 +208,30 @@ func configureCameras(ctx context.Context,
 		if err != nil {
 			return "", nil, errors.Wrap(err,
 				"Unable to get camera features for first camera, make sure the color camera is listed first")
-		} else {
-			intrinsics, ok := proj.(*transform.PinholeCameraIntrinsics)
-			if !ok {
-				return "", nil, transform.NewNoIntrinsicsError("Intrinsics do not exist")
-			}
+		}
 
-			err = intrinsics.CheckValid()
-			if err != nil {
-				return "", nil, err
-			}
+		intrinsics, ok := proj.(*transform.PinholeCameraIntrinsics)
+		if !ok {
+			return "", nil, transform.NewNoIntrinsicsError("Intrinsics do not exist")
+		}
 
-			props, err := cam.Properties(ctx)
-			if err != nil {
-				return "", nil, errors.Wrap(err, "error getting camera properties for slam service")
-			}
+		err = intrinsics.CheckValid()
+		if err != nil {
+			return "", nil, err
+		}
 
-			brownConrady, ok := props.DistortionParams.(*transform.BrownConrady)
-			if !ok {
-				return "", nil, errors.New("error getting distortion_parameters for slam service, " +
-					"only BrownConrady distortion parameters are supported")
-			}
-			if err := brownConrady.CheckValid(); err != nil {
-				return "", nil, errors.Wrapf(err, "error validating distortion_parameters for slam service")
-			}
+		props, err := cam.Properties(ctx)
+		if err != nil {
+			return "", nil, errors.Wrap(err, "error getting camera properties for slam service")
+		}
+
+		brownConrady, ok := props.DistortionParams.(*transform.BrownConrady)
+		if !ok {
+			return "", nil, errors.New("error getting distortion_parameters for slam service, " +
+				"only BrownConrady distortion parameters are supported")
+		}
+		if err := brownConrady.CheckValid(); err != nil {
+			return "", nil, errors.Wrapf(err, "error validating distortion_parameters for slam service")
 		}
 
 		cams = append(cams, cam)
@@ -251,7 +255,11 @@ func configureCameras(ctx context.Context,
 
 // Position forwards the request for positional data to the slam library's gRPC service. Once a response is received,
 // it is unpacked into a PoseInFrame.
-func (orbSvc *orbslamService) Position(ctx context.Context, name string, extra map[string]interface{}) (*referenceframe.PoseInFrame, error) {
+func (orbSvc *orbslamService) Position(
+	ctx context.Context,
+	name string,
+	extra map[string]interface{},
+) (*referenceframe.PoseInFrame, error) {
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::Position")
 	defer span.End()
 
@@ -577,7 +585,6 @@ func (orbSvc *orbslamService) Close() error {
 			if err := orbSvc.slamProcessLogReader.Close(); err != nil {
 				return errors.Wrap(err, "error occurred during closeout of slam log reader")
 			}
-			orbSvc.slamProcessLogReader.Close()
 		}
 		if orbSvc.slamProcessLogWriter != nil {
 			if err := orbSvc.slamProcessLogWriter.Close(); err != nil {

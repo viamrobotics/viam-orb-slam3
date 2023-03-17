@@ -680,7 +680,7 @@ func TestORBSLAMDataProcess(t *testing.T) {
 	grpcServer.Stop()
 	test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 
-	slamSvc := svc.(testhelper.Service)
+	orbSvc := svc.(testhelper.Service)
 
 	t.Run("ORBSLAM3 Data Process with camera in slam mode mono", func(t *testing.T) {
 		goodCam := &inject.Camera{}
@@ -702,7 +702,7 @@ func TestORBSLAMDataProcess(t *testing.T) {
 		cancelCtx, cancelFunc := context.WithCancel(context.Background())
 
 		c := make(chan int, 100)
-		slamSvc.StartDataProcess(cancelCtx, cams, c)
+		orbSvc.StartDataProcess(cancelCtx, cams, c)
 
 		<-c
 		cancelFunc()
@@ -720,7 +720,7 @@ func TestORBSLAMDataProcess(t *testing.T) {
 
 		cancelCtx, cancelFunc := context.WithCancel(context.Background())
 		c := make(chan int, 100)
-		slamSvc.StartDataProcess(cancelCtx, cams, c)
+		orbSvc.StartDataProcess(cancelCtx, cams, c)
 
 		<-c
 		obsAll := obs.All()
@@ -822,8 +822,8 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		svc, err := createSLAMService(t, attrCfg, logger, false, true)
 		test.That(t, err, test.ShouldBeNil)
 
-		slamSvc := svc.(testhelper.Service)
-		processCfg := slamSvc.GetSLAMProcessConfig()
+		orbSvc := svc.(testhelper.Service)
+		processCfg := orbSvc.GetSLAMProcessConfig()
 		cmd := append([]string{processCfg.Name}, processCfg.Args...)
 
 		cmdResult := [][]string{
@@ -863,8 +863,8 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		svc, err := createSLAMService(t, attrCfg, logger, false, true)
 		test.That(t, err, test.ShouldBeNil)
 
-		slamSvc := svc.(testhelper.Service)
-		processCfg := slamSvc.GetSLAMProcessConfig()
+		orbSvc := svc.(testhelper.Service)
+		processCfg := orbSvc.GetSLAMProcessConfig()
 		cmd := append([]string{processCfg.Name}, processCfg.Args...)
 
 		cmdResult := [][]string{
@@ -916,7 +916,7 @@ func TestSLAMProcessFail(t *testing.T) {
 	svc, err := createSLAMService(t, attrCfg, logger, false, true)
 	test.That(t, err, test.ShouldBeNil)
 
-	slamSvc := svc.(testhelper.Service)
+	orbSvc := svc.(testhelper.Service)
 
 	t.Run("Run SLAM process that errors out due to invalid binary location", func(t *testing.T) {
 		cancelCtx, cancelFunc := context.WithCancel(context.Background())
@@ -927,12 +927,12 @@ func TestSLAMProcessFail(t *testing.T) {
 		// unused value and then tests to ensure that creating a SLAM process fails
 		viamorbslam3.SetBinaryLocationForTesting("fail_this_binary_does_not_exist")
 		defer viamorbslam3.SetBinaryLocationForTesting(originalBinaryLocation)
-		err := slamSvc.StartSLAMProcess(cancelCtx)
+		err := orbSvc.StartSLAMProcess(cancelCtx)
 		test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "problem adding slam process:")
 
 		cancelFunc()
 
-		err = slamSvc.StopSLAMProcess()
+		err = orbSvc.StopSLAMProcess()
 		test.That(t, err, test.ShouldBeNil)
 	})
 
