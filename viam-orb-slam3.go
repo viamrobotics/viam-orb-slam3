@@ -517,7 +517,7 @@ func NewBuiltIn(ctx context.Context,
 	}
 
 	if err = slamConfig.SetupDirectories(svcConfig.DataDirectory, logger); err != nil {
-		return nil, errors.Errorf("unable to setup working directories: %v", err)
+		return nil, errors.Wrap(err, "unable to setup working directories")
 	}
 
 	if slamMode == slam.Rgbd || slamMode == slam.Mono {
