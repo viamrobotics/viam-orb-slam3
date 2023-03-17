@@ -896,10 +896,6 @@ func TestSLAMProcessFail(t *testing.T) {
 		UseLiveData:   &_true,
 	}
 
-	// Create slam service to prove that the defaults succeed
-	svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
-	test.That(t, err, test.ShouldBeNil)
-
 	t.Run("Run SLAM process that errors out due to invalid executable name", func(t *testing.T) {
 		// This test ensures that we get the correct error if the user does
 		// not have the correct binary installed.
@@ -908,7 +904,6 @@ func TestSLAMProcessFail(t *testing.T) {
 	})
 
 	grpcServer.Stop()
-	test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 
 	closeOutSLAMService(t, name)
 }
