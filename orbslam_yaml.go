@@ -1,3 +1,4 @@
+// Package viamorbslam3 implements simultaneous localization and mapping
 // This is an Experimental package
 package viamorbslam3
 
