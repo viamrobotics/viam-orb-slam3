@@ -270,7 +270,6 @@ func (orbSvc *orbslamService) Position(
 
 	var pInFrame *referenceframe.PoseInFrame
 	var returnedExt map[string]interface{}
-	var componentReference string
 
 	// TODO: Once RSDK-1053 (https://viam.atlassian.net/browse/RSDK-1066) is complete the original code before extracting position
 	// from GetPosition will be removed and the GetPositionNew -> GetPosition
@@ -283,8 +282,7 @@ func (orbSvc *orbslamService) Position(
 			return nil, errors.Wrap(err, "error getting SLAM position")
 		}
 
-		componentReference = resp.GetComponentReference()
-		pInFrame = referenceframe.NewPoseInFrame(componentReference, spatialmath.NewPoseFromProtobuf(resp.GetPose()))
+		pInFrame = referenceframe.NewPoseInFrame(resp.GetComponentReference(), spatialmath.NewPoseFromProtobuf(resp.GetPose()))
 		returnedExt = resp.Extra.AsMap()
 	} else {
 		//nolint:staticcheck
@@ -295,13 +293,29 @@ func (orbSvc *orbslamService) Position(
 			return nil, errors.Wrap(err, "error getting SLAM position")
 		}
 
-		componentReference = resp.Pose.ReferenceFrame
 		pInFrame = referenceframe.ProtobufToPoseInFrame(resp.Pose)
 		returnedExt = resp.Extra.AsMap()
 	}
 
-	newPose, _, err := slamUtils.CheckQuaternionFromClientAlgo(pInFrame.Pose(), componentReference, returnedExt)
-	pInFrame = referenceframe.NewPoseInFrame(pInFrame.Parent(), newPose)
+	// TODO DATA-531: https://viam.atlassian.net/jira/software/c/projects/DATA/boards/30?modal=detail&selectedIssue=DATA-531
+	// Remove extraction and conversion of quaternion from the extra field in the response once the Rust
+	// spatial math library is available and the desired math can be implemented on the orbSLAM side
+	if val, ok := returnedExt["quat"]; ok {
+		q := val.(map[string]interface{})
+
+		valReal, ok1 := q["real"].(float64)
+		valIMag, ok2 := q["imag"].(float64)
+		valJMag, ok3 := q["jmag"].(float64)
+		valKMag, ok4 := q["kmag"].(float64)
+
+		if !ok1 || !ok2 || !ok3 || !ok4 {
+			orbSvc.logger.Debugf("quaternion given, but invalid format detected, %v, skipping quaternion transform", q)
+			return pInFrame, nil
+		}
+		newPose := spatialmath.NewPose(pInFrame.Pose().Point(),
+			&spatialmath.Quaternion{Real: valReal, Imag: valIMag, Jmag: valJMag, Kmag: valKMag})
+		pInFrame = referenceframe.NewPoseInFrame(pInFrame.Parent(), newPose)
+	}
 
 	return pInFrame, nil
 }
