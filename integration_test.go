@@ -33,7 +33,7 @@ const (
 	orbSleepMsec               = 100
 )
 
-// Creates the vocabulary file required by the orbslam binary.
+// createVocabularyFile creates the vocabulary file required by the orbslam binary.
 func createVocabularyFile(name string) error {
 	source, err := os.Open(artifact.MustPath("slam/ORBvoc.txt"))
 	if err != nil {
@@ -49,8 +49,8 @@ func createVocabularyFile(name string) error {
 	return err
 }
 
-// Releases an image or image pair to be served by the mock camera(s). If a pair of images is
-// released, it is released under a mutex, so that the images will be consumed in the same call
+// releaseImages releases an image or image pair to be served by the mock camera(s). If a pair of images is
+// released, it is released under a mutex so that the images will be consumed in the same call
 // to getSimultaneousColorAndDepth().
 func releaseImages(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	switch subAlgo {
@@ -74,7 +74,7 @@ func releaseImages(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	}
 }
 
-// Checks the orbslam map and confirms there are more than zero map points.
+// testOrbslamMap checks the orbslam map and confirms there are more than zero map points.
 func testOrbslamMap(t *testing.T, svc slam.Service) {
 	pcd, err := slam.GetPointCloudMapFull(context.Background(), svc, "test")
 	test.That(t, err, test.ShouldBeNil)
@@ -86,7 +86,7 @@ func testOrbslamMap(t *testing.T, svc slam.Service) {
 	test.That(t, pointcloudStream.Size(), test.ShouldBeGreaterThanOrEqualTo, 100)
 }
 
-// Checks the orbslam position within a defined tolerance.
+// testOrbslamPosition checks the orbslam position within a defined tolerance.
 func testOrbslamPosition(t *testing.T, svc slam.Service, subAlgo viamorbslam3.SubAlgo, actionMode, expectedComponentRef string) {
 	var expectedPos r3.Vector
 	expectedOri := &spatialmath.R4AA{}
@@ -123,7 +123,7 @@ func testOrbslamPosition(t *testing.T, svc slam.Service, subAlgo viamorbslam3.Su
 	test.That(t, actualOri.Theta, test.ShouldBeBetween, expectedOri.Theta-toleranceOri, expectedOri.Theta+toleranceOri)
 }
 
-// Checks the orbslam internal state.
+// testOrbslamInternalState checks the orbslam internal state.
 func testOrbslamInternalState(t *testing.T, svc slam.Service, dataDir string) {
 	internalStateStream, err := slam.GetInternalStateFull(context.Background(), svc, "test")
 	test.That(t, err, test.ShouldBeNil)
@@ -242,13 +242,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	// Added sleep to ensure orbslam stops
 	time.Sleep(time.Millisecond * orbSleepMsec)
 
-	// test orbslam directory, should have 2 configs
+	// Test orbslam directory, should have two configs
 	testOrbslamDir(t, name, expectedMapsOnline, 2)
 
-	// Delete the last image (or image pair) in the data directory, so that offline mode runs on
-	// the same data as online mode. (Online mode will not read the last image (or image pair),
+	// Delete the last image (or image pair) in the data directory so that offline mode runs on
+	// the same data as online mode. Note: Online mode will not read the last image (or image pair),
 	// since it always processes the second-most-recent image (or image pair), in case the
-	// most-recent image (or image pair) is currently being written.
+	//most recent image (or image pair) is still being written.
 	var directories []string
 	switch subAlgo {
 	case viamorbslam3.Mono:
@@ -321,7 +321,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 		}
 	}
 
-	// setting to sensors[0] because orbslam interprets the component reference in offline mode
+	// Setting to sensors[0] because orbslam interprets the component reference in offline mode
 	testOrbslamPosition(t, svc, subAlgo, "mapping", sensors[0])
 	testOrbslamMap(t, svc)
 
@@ -355,7 +355,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	// Added sleep to ensure orbslam stops
 	time.Sleep(time.Millisecond * orbSleepMsec)
 
-	// test orbslam directory, should have 2 configs
+	// Test orbslam directory, should have two configs
 	testOrbslamDir(t, name, expectedMapsOffline, 2)
 
 	// Remove existing images, but leave maps and config (so we keep the vocabulary file).
@@ -447,7 +447,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	// Added sleep to ensure orbslam stops
 	time.Sleep(time.Millisecond * orbSleepMsec)
 
-	// test orbslam directory, should have 3 configs
+	// Test orbslam directory, should have three configs
 	testOrbslamDir(t, name, expectedMapsApriori, 3)
 
 	// Clear out directory
