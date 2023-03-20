@@ -52,8 +52,8 @@ func createVocabularyFile(name string) error {
 // Releases an image or image pair to be served by the mock camera(s). If a pair of images is
 // released, it is released under a mutex, so that the images will be consumed in the same call
 // to getSimultaneousColorAndDepth().
-func releaseImages(t *testing.T, mode viamorbslam3.SubAlgo) {
-	switch mode {
+func releaseImages(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
+	switch subAlgo {
 	case viamorbslam3.Mono:
 		orbslamIntWebcamReleaseImageChan <- 1
 	case viamorbslam3.Rgbd:
@@ -87,20 +87,20 @@ func testOrbslamMap(t *testing.T, svc slam.Service) {
 }
 
 // Checks the orbslam position within a defined tolerance.
-func testOrbslamPosition(t *testing.T, svc slam.Service, mode, actionMode, expectedComponentRef string) {
+func testOrbslamPosition(t *testing.T, svc slam.Service, subAlgo viamorbslam3.SubAlgo, actionMode, expectedComponentRef string) {
 	var expectedPos r3.Vector
 	expectedOri := &spatialmath.R4AA{}
 	tolerancePos := 0.5
 	toleranceOri := 0.5
 
 	switch {
-	case mode == "mono" && actionMode == "mapping":
+	case subAlgo == viamorbslam3.Mono && actionMode == "mapping":
 		expectedPos = r3.Vector{X: 0.020, Y: -0.032, Z: -0.053}
 		expectedOri = &spatialmath.R4AA{Theta: 0.104, RX: 0.144, RY: 0.980, RZ: -0.137}
-	case mode == "mono" && actionMode == "updating":
+	case subAlgo == viamorbslam3.Mono && actionMode == "updating":
 		expectedPos = r3.Vector{X: 0.023, Y: -0.036, Z: -0.040}
 		expectedOri = &spatialmath.R4AA{Theta: 0.099, RX: 0.092, RY: 0.993, RZ: -0.068}
-	case mode == "rgbd":
+	case subAlgo == viamorbslam3.Rgbd:
 		expectedPos = r3.Vector{X: -0.001, Y: -0.004, Z: -0.008}
 		expectedOri = &spatialmath.R4AA{Theta: 0.002, RX: 0.602, RY: -0.772, RZ: -0.202}
 	}
@@ -225,7 +225,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 		}
 	}
 
-	testOrbslamPosition(t, svc, reflect.ValueOf(subAlgo).String(), "mapping", attrCfg.Sensors[0])
+	testOrbslamPosition(t, svc, subAlgo, "mapping", attrCfg.Sensors[0])
 	testOrbslamMap(t, svc)
 
 	// Close out slam service
@@ -322,7 +322,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	}
 
 	// setting to sensors[0] because orbslam interprets the component reference in offline mode
-	testOrbslamPosition(t, svc, reflect.ValueOf(subAlgo).String(), "mapping", sensors[0])
+	testOrbslamPosition(t, svc, subAlgo, "mapping", sensors[0])
 	testOrbslamMap(t, svc)
 
 	if !orbslamHangs {
@@ -433,7 +433,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 		}
 	}
 
-	testOrbslamPosition(t, svc, reflect.ValueOf(subAlgo).String(), "updating", attrCfg.Sensors[0])
+	testOrbslamPosition(t, svc, subAlgo, "updating", attrCfg.Sensors[0])
 	testOrbslamMap(t, svc)
 
 	// Close out slam service
