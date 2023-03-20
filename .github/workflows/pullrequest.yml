@@ -7,7 +7,7 @@ concurrency:
 on:
   workflow_dispatch:
   pull_request:
-    branches: [ 'zp/2028-integration-tests-ci' ]
+    branches: [ 'main' ]
     types: [ 'opened', 'reopened', 'synchronize' ]
 
 # To test workflow updates you need to work in a branch directly on viamrobotics/viam-orb-slam3
@@ -16,4 +16,4 @@ on:
 
 jobs:
   test:
-    uses: viamrobotics/viam-orb-slam3/.github/workflows/test.yml@zp/2028-integration-tests-ci
+    uses: viamrobotics/viam-orb-slam3/.github/workflows/test.yml@main
