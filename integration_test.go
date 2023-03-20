@@ -248,7 +248,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	// Delete the last image (or image pair) in the data directory so that offline mode runs on
 	// the same data as online mode. Note: Online mode will not read the last image (or image pair),
 	// since it always processes the second-most-recent image (or image pair), in case the
-	//most recent image (or image pair) is still being written.
+	// most recent image (or image pair) is still being written.
 	var directories []string
 	switch subAlgo {
 	case viamorbslam3.Mono:
