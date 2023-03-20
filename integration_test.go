@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -82,6 +81,7 @@ func testOrbslamMap(t *testing.T, svc slam.Service) {
 	test.That(t, pcd, test.ShouldNotBeNil)
 
 	pointcloudStream, err := pointcloud.ReadPCD(bytes.NewReader(pcd))
+	test.That(t, err, test.ShouldBeNil)
 	t.Logf("Pointcloud points: %v", pointcloudStream.Size())
 	test.That(t, pointcloudStream.Size(), test.ShouldBeGreaterThanOrEqualTo, 100)
 }
@@ -198,12 +198,12 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	// Release camera image(s), since orbslam looks for the second most recent image(s)
 	releaseImages(t, subAlgo)
 	// Check if orbslam hangs and needs to be shut down
-	orbslam_hangs := false
+	orbslamHangs := false
 
 	// Wait for orbslam to finish processing images
 	logReader := svc.(testhelper.Service).GetSLAMProcessBufferedLogReader()
 	for i := 0; i < getNumOrbslamImages(subAlgo)-2; i++ {
-		start_time_sent_image := time.Now()
+		startTimeSentImage := time.Now()
 		t.Logf("Find log line for image %v", i)
 		releaseImages(t, subAlgo)
 		for {
@@ -214,13 +214,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 				break
 			}
 			test.That(t, strings.Contains(line, "Fail to track local map!"), test.ShouldBeFalse)
-			if time.Since(start_time_sent_image) > time.Duration(dataInsertionMaxTimeoutMin)*time.Minute {
-				orbslam_hangs = true
+			if time.Since(startTimeSentImage) > time.Duration(dataInsertionMaxTimeoutMin)*time.Minute {
+				orbslamHangs = true
 				t.Log("orbslam hangs: exiting the data loop")
 				break
 			}
 		}
-		if orbslam_hangs {
+		if orbslamHangs {
 			break
 		}
 	}
@@ -230,7 +230,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 
 	// Close out slam service
 	err = utils.TryClose(context.Background(), svc)
-	if !orbslam_hangs {
+	if !orbslamHangs {
 		test.That(t, err, test.ShouldBeNil)
 	} else if err != nil {
 		t.Skip("Skipping test because orbslam hangs and failed to shut down")
@@ -259,12 +259,12 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 		t.FailNow()
 	}
 	for _, directoryName := range directories {
-		files, err := ioutil.ReadDir(name + "/data/" + directoryName)
+		files, err := os.ReadDir(name + "/data/" + directoryName)
 		test.That(t, err, test.ShouldBeNil)
 		lastFileName := files[len(files)-1].Name()
 		test.That(t, os.Remove(name+"/data/"+directoryName+lastFileName), test.ShouldBeNil)
 	}
-	prevNumFiles -= 1
+	prevNumFiles--
 
 	// Remove any maps
 	test.That(t, slamTesthelper.ResetFolder(name+"/map"), test.ShouldBeNil)
@@ -298,9 +298,9 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	test.That(t, err, test.ShouldBeNil)
 
 	// Check if orbslam hangs and needs to be shut down
-	orbslam_hangs = false
+	orbslamHangs = false
 
-	start_time_sent_image := time.Now()
+	startTimeSentImage := time.Now()
 	// Wait for orbslam to finish processing images
 	logReader = svc.(testhelper.Service).GetSLAMProcessBufferedLogReader()
 	for {
@@ -308,23 +308,24 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 		test.That(t, err, test.ShouldBeNil)
 		if strings.Contains(line, "Passed image to SLAM") {
 			prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slam.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
-			start_time_sent_image = time.Now()
+			startTimeSentImage = time.Now()
 		}
 		if strings.Contains(line, "Finished processing offline images") {
 			break
 		}
 		test.That(t, strings.Contains(line, "Fail to track local map!"), test.ShouldBeFalse)
-		if time.Since(start_time_sent_image) > time.Duration(dataInsertionMaxTimeoutMin)*time.Minute {
-			orbslam_hangs = true
+		if time.Since(startTimeSentImage) > time.Duration(dataInsertionMaxTimeoutMin)*time.Minute {
+			orbslamHangs = true
 			t.Log("orbslam hangs: exiting the data loop")
 			break
 		}
 	}
 
-	testOrbslamPosition(t, svc, reflect.ValueOf(subAlgo).String(), "mapping", sensors[0]) // setting to sensors[0] because orbslam interprets the component reference in offline mode
+	// setting to sensors[0] because orbslam interprets the component reference in offline mode
+	testOrbslamPosition(t, svc, reflect.ValueOf(subAlgo).String(), "mapping", sensors[0])
 	testOrbslamMap(t, svc)
 
-	if !orbslam_hangs {
+	if !orbslamHangs {
 		// Wait for the final map to be saved
 		for {
 			line, err := logReader.ReadString('\n')
@@ -342,7 +343,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 
 	// Close out slam service
 	err = utils.TryClose(context.Background(), svc)
-	if !orbslam_hangs {
+	if !orbslamHangs {
 		test.That(t, err, test.ShouldBeNil)
 	} else if err != nil {
 		t.Skip("Skipping test because orbslam hangs and failed to shut down")
@@ -406,11 +407,11 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	// Release camera image(s), since orbslam looks for the second most recent image(s)
 	releaseImages(t, subAlgo)
 	// Check if orbslam hangs and needs to be shut down
-	orbslam_hangs = false
+	orbslamHangs = false
 
 	// Wait for orbslam to finish processing images
 	for i := 0; i < getNumOrbslamImages(subAlgo)-2; i++ {
-		start_time_sent_image = time.Now()
+		startTimeSentImage = time.Now()
 		t.Logf("Find log line for image %v", i)
 		releaseImages(t, subAlgo)
 		for {
@@ -421,13 +422,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 				break
 			}
 			test.That(t, strings.Contains(line, "Fail to track local map!"), test.ShouldBeFalse)
-			if time.Since(start_time_sent_image) > time.Duration(dataInsertionMaxTimeoutMin)*time.Minute {
-				orbslam_hangs = true
+			if time.Since(startTimeSentImage) > time.Duration(dataInsertionMaxTimeoutMin)*time.Minute {
+				orbslamHangs = true
 				t.Log("orbslam hangs: exiting the data loop")
 				break
 			}
 		}
-		if orbslam_hangs {
+		if orbslamHangs {
 			break
 		}
 	}
@@ -437,7 +438,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 
 	// Close out slam service
 	err = utils.TryClose(context.Background(), svc)
-	if !orbslam_hangs {
+	if !orbslamHangs {
 		test.That(t, err, test.ShouldBeNil)
 	} else if err != nil {
 		t.Skip("Skipping test because orbslam hangs and failed to shut down")
@@ -456,11 +457,11 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 // Checks the current slam directory to see if the number of files is around the expected amount
 // Because how orbslam runs, the number of maps is not the same between integration tests.
 func testOrbslamDir(t *testing.T, path string, expectedMaps, expectedConfigs int) {
-	mapsInDir, err := ioutil.ReadDir(path + "/map/")
+	mapsInDir, err := os.ReadDir(path + "/map/")
 	test.That(t, err, test.ShouldBeNil)
 	test.That(t, len(mapsInDir), test.ShouldBeGreaterThanOrEqualTo, expectedMaps)
 
-	configsInDir, err := ioutil.ReadDir(path + "/config/")
+	configsInDir, err := os.ReadDir(path + "/config/")
 	test.That(t, err, test.ShouldBeNil)
 	test.That(t, len(configsInDir), test.ShouldEqual, expectedConfigs)
 }
