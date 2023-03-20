@@ -1,4 +1,4 @@
-package builtin_test
+package viamorbslam3_test
 
 import (
 	"bytes"
@@ -17,13 +17,16 @@ import (
 	"github.com/golang/geo/r3"
 	"go.viam.com/rdk/pointcloud"
 	"go.viam.com/rdk/services/slam"
-	"go.viam.com/rdk/services/slam/internal/testhelper"
 	"go.viam.com/rdk/spatialmath"
 	slamConfig "go.viam.com/slam/config"
+	dataprocess "go.viam.com/slam/dataprocess"
 	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
 	"go.viam.com/utils"
 	"go.viam.com/utils/artifact"
+
+	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
+	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 
 const (
@@ -50,11 +53,11 @@ func createVocabularyFile(name string) error {
 // Releases an image or image pair to be served by the mock camera(s). If a pair of images is
 // released, it is released under a mutex, so that the images will be consumed in the same call
 // to getSimultaneousColorAndDepth().
-func releaseImages(t *testing.T, mode slam.Mode) {
+func releaseImages(t *testing.T, mode viamorbslam3.SubAlgo) {
 	switch mode {
-	case slam.Mono:
+	case viamorbslam3.Mono:
 		orbslamIntWebcamReleaseImageChan <- 1
-	case slam.Rgbd:
+	case viamorbslam3.Rgbd:
 		for {
 			orbslamIntCameraMutex.Lock()
 			if len(orbslamIntCameraReleaseImagesChan) == cap(orbslamIntCameraReleaseImagesChan) {
@@ -83,8 +86,8 @@ func testOrbslamMap(t *testing.T, svc slam.Service) {
 	test.That(t, pointcloudStream.Size(), test.ShouldBeGreaterThanOrEqualTo, 100)
 }
 
-// Checks the orbslam position within a defined tolerance
-func testOrbslamPosition(t *testing.T, svc slam.Service, mode, actionMode string, expectedComponentRef string) {
+// Checks the orbslam position within a defined tolerance.
+func testOrbslamPosition(t *testing.T, svc slam.Service, mode, actionMode, expectedComponentRef string) {
 	var expectedPos r3.Vector
 	expectedOri := &spatialmath.R4AA{}
 	tolerancePos := 0.5
@@ -127,12 +130,12 @@ func testOrbslamInternalState(t *testing.T, svc slam.Service, dataDir string) {
 
 	// Save the data from the call to GetInternalStateStream for use in next test.
 	timeStamp := time.Now()
-	filename := filepath.Join(dataDir, "map", "orbslam_int_color_camera_data_"+timeStamp.UTC().Format(slamTimeFormat)+".osa")
-	err = os.WriteFile(filename, internalStateStream, 0644)
+	filename := filepath.Join(dataDir, "map", "orbslam_int_color_camera_data_"+timeStamp.UTC().Format(dataprocess.SlamTimeFormat)+".osa")
+	err = os.WriteFile(filename, internalStateStream, 0o644)
 	test.That(t, err, test.ShouldBeNil)
 }
 
-func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
+func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	_, err := exec.LookPath("orb_grpc_server")
 	if err != nil {
 		t.Skip("Skipping test because orb_grpc_server binary was not found")
@@ -148,13 +151,13 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 
 	var sensors []string
 	var expectedMapsOnline, expectedMapsOffline, expectedMapsApriori int
-	switch mode {
-	case slam.Mono:
+	switch subAlgo {
+	case viamorbslam3.Mono:
 		sensors = []string{"orbslam_int_webcam"}
 		expectedMapsOnline = 0
 		expectedMapsOffline = 1
 		expectedMapsApriori = expectedMapsOnline + 1
-	case slam.Rgbd:
+	case viamorbslam3.Rgbd:
 		sensors = []string{"orbslam_int_color_camera", "orbslam_int_depth_camera"}
 		expectedMapsOnline = 5
 		expectedMapsOffline = 1
@@ -170,7 +173,7 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 	attrCfg := &slamConfig.AttrConfig{
 		Sensors: sensors,
 		ConfigParams: map[string]string{
-			"mode":              reflect.ValueOf(mode).String(),
+			"mode":              reflect.ValueOf(subAlgo).String(),
 			"orb_n_features":    "1250",
 			"orb_scale_factor":  "1.2",
 			"orb_n_levels":      "8",
@@ -187,27 +190,27 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 	}
 
 	// Release camera image(s) for service validation
-	releaseImages(t, mode)
+	releaseImages(t, subAlgo)
 	// Create slam service using a real orbslam binary
-	svc, err := createSLAMService(t, attrCfg, "orbslamv3", logger, true, true)
+	svc, err := createSLAMService(t, attrCfg, logger, true, true, viamorbslam3.DefaultExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
 	// Release camera image(s), since orbslam looks for the second most recent image(s)
-	releaseImages(t, mode)
+	releaseImages(t, subAlgo)
 	// Check if orbslam hangs and needs to be shut down
 	orbslam_hangs := false
 
 	// Wait for orbslam to finish processing images
 	logReader := svc.(testhelper.Service).GetSLAMProcessBufferedLogReader()
-	for i := 0; i < getNumOrbslamImages(mode)-2; i++ {
+	for i := 0; i < getNumOrbslamImages(subAlgo)-2; i++ {
 		start_time_sent_image := time.Now()
 		t.Logf("Find log line for image %v", i)
-		releaseImages(t, mode)
+		releaseImages(t, subAlgo)
 		for {
 			line, err := logReader.ReadString('\n')
 			test.That(t, err, test.ShouldBeNil)
 			if strings.Contains(line, "Passed image to SLAM") {
-				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, mode, name, prevNumFiles, deleteProcessedData, useLiveData)
+				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slam.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
 				break
 			}
 			test.That(t, strings.Contains(line, "Fail to track local map!"), test.ShouldBeFalse)
@@ -222,7 +225,7 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 		}
 	}
 
-	testOrbslamPosition(t, svc, reflect.ValueOf(mode).String(), "mapping", attrCfg.Sensors[0])
+	testOrbslamPosition(t, svc, reflect.ValueOf(subAlgo).String(), "mapping", attrCfg.Sensors[0])
 	testOrbslamMap(t, svc)
 
 	// Close out slam service
@@ -247,10 +250,10 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 	// since it always processes the second-most-recent image (or image pair), in case the
 	// most-recent image (or image pair) is currently being written.
 	var directories []string
-	switch mode {
-	case slam.Mono:
+	switch subAlgo {
+	case viamorbslam3.Mono:
 		directories = []string{"rgb/"}
-	case slam.Rgbd:
+	case viamorbslam3.Rgbd:
 		directories = []string{"rgb/", "depth/"}
 	default:
 		t.FailNow()
@@ -276,7 +279,7 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 	attrCfg = &slamConfig.AttrConfig{
 		Sensors: []string{},
 		ConfigParams: map[string]string{
-			"mode":              reflect.ValueOf(mode).String(),
+			"mode":              reflect.ValueOf(subAlgo).String(),
 			"orb_n_features":    "1250",
 			"orb_scale_factor":  "1.2",
 			"orb_n_levels":      "8",
@@ -291,7 +294,7 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 	}
 
 	// Create slam service using a real orbslam binary
-	svc, err = createSLAMService(t, attrCfg, "orbslamv3", golog.NewTestLogger(t), true, true)
+	svc, err = createSLAMService(t, attrCfg, golog.NewTestLogger(t), true, true, viamorbslam3.DefaultExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
 	// Check if orbslam hangs and needs to be shut down
@@ -304,7 +307,7 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 		line, err := logReader.ReadString('\n')
 		test.That(t, err, test.ShouldBeNil)
 		if strings.Contains(line, "Passed image to SLAM") {
-			prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, mode, name, prevNumFiles, deleteProcessedData, useLiveData)
+			prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slam.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
 			start_time_sent_image = time.Now()
 		}
 		if strings.Contains(line, "Finished processing offline images") {
@@ -318,7 +321,7 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 		}
 	}
 
-	testOrbslamPosition(t, svc, reflect.ValueOf(mode).String(), "mapping", sensors[0]) // setting to sensors[0] because orbslam interprets the component reference in offline mode
+	testOrbslamPosition(t, svc, reflect.ValueOf(subAlgo).String(), "mapping", sensors[0]) // setting to sensors[0] because orbslam interprets the component reference in offline mode
 	testOrbslamMap(t, svc)
 
 	if !orbslam_hangs {
@@ -369,7 +372,7 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 	attrCfg = &slamConfig.AttrConfig{
 		Sensors: sensors,
 		ConfigParams: map[string]string{
-			"mode":              reflect.ValueOf(mode).String(),
+			"mode":              reflect.ValueOf(subAlgo).String(),
 			"orb_n_features":    "1250",
 			"orb_scale_factor":  "1.2",
 			"orb_n_levels":      "8",
@@ -384,9 +387,9 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 	}
 
 	// Release camera image(s) for service validation
-	releaseImages(t, mode)
+	releaseImages(t, subAlgo)
 	// Create slam service using a real orbslam binary
-	svc, err = createSLAMService(t, attrCfg, "orbslamv3", golog.NewTestLogger(t), true, true)
+	svc, err = createSLAMService(t, attrCfg, golog.NewTestLogger(t), true, true, viamorbslam3.DefaultExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
 	// Make sure we initialize from a saved map
@@ -401,20 +404,20 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 	}
 
 	// Release camera image(s), since orbslam looks for the second most recent image(s)
-	releaseImages(t, mode)
+	releaseImages(t, subAlgo)
 	// Check if orbslam hangs and needs to be shut down
 	orbslam_hangs = false
 
 	// Wait for orbslam to finish processing images
-	for i := 0; i < getNumOrbslamImages(mode)-2; i++ {
+	for i := 0; i < getNumOrbslamImages(subAlgo)-2; i++ {
 		start_time_sent_image = time.Now()
 		t.Logf("Find log line for image %v", i)
-		releaseImages(t, mode)
+		releaseImages(t, subAlgo)
 		for {
 			line, err := logReader.ReadString('\n')
 			test.That(t, err, test.ShouldBeNil)
 			if strings.Contains(line, "Passed image to SLAM") {
-				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, mode, name, prevNumFiles, deleteProcessedData, useLiveData)
+				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slam.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
 				break
 			}
 			test.That(t, strings.Contains(line, "Fail to track local map!"), test.ShouldBeFalse)
@@ -429,7 +432,7 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 		}
 	}
 
-	testOrbslamPosition(t, svc, reflect.ValueOf(mode).String(), "updating", attrCfg.Sensors[0])
+	testOrbslamPosition(t, svc, reflect.ValueOf(subAlgo).String(), "updating", attrCfg.Sensors[0])
 	testOrbslamMap(t, svc)
 
 	// Close out slam service
@@ -448,12 +451,11 @@ func integrationTestHelperOrbslam(t *testing.T, mode slam.Mode) {
 
 	// Clear out directory
 	closeOutSLAMService(t, name)
-
 }
 
 // Checks the current slam directory to see if the number of files is around the expected amount
-// Because how orbslam runs, the number of maps is not the same between integration tests
-func testOrbslamDir(t *testing.T, path string, expectedMaps int, expectedConfigs int) {
+// Because how orbslam runs, the number of maps is not the same between integration tests.
+func testOrbslamDir(t *testing.T, path string, expectedMaps, expectedConfigs int) {
 	mapsInDir, err := ioutil.ReadDir(path + "/map/")
 	test.That(t, err, test.ShouldBeNil)
 	test.That(t, len(mapsInDir), test.ShouldBeGreaterThanOrEqualTo, expectedMaps)
@@ -464,9 +466,9 @@ func testOrbslamDir(t *testing.T, path string, expectedMaps int, expectedConfigs
 }
 
 func TestOrbslamIntegrationRGBD(t *testing.T) {
-	integrationTestHelperOrbslam(t, slam.Rgbd)
+	integrationTestHelperOrbslam(t, viamorbslam3.Rgbd)
 }
 
 func TestOrbslamIntegrationMono(t *testing.T) {
-	integrationTestHelperOrbslam(t, slam.Mono)
+	integrationTestHelperOrbslam(t, viamorbslam3.Mono)
 }

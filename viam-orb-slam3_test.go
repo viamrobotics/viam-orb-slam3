@@ -406,8 +406,6 @@ func createSLAMService(
 	t *testing.T,
 	attrCfg *slamConfig.AttrConfig,
 	logger golog.Logger,
-	// TODO(RSDK-2026) will be fixed once integration tests use this option in the next few PRs
-	//nolint:unparam
 	bufferSLAMProcessLogs bool,
 	success bool,
 	executableName string,
