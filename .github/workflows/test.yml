@@ -96,4 +96,4 @@ jobs:
     - name: Run viam-orb-slam3 integration tests
       if: matrix.platform == 'linux/amd64'
       run: |
-        sudo -u testbot bash -lc 'cd viam-orb-slam3 && sudo go test -v -run TestOrbslamIntegration'
+        sudo -u testbot bash -lc 'cd viam-orb-slam3 && sudo go test -v -race -run TestOrbslamIntegration'
