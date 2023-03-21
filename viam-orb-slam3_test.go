@@ -406,8 +406,6 @@ func createSLAMService(
 	t *testing.T,
 	attrCfg *slamConfig.AttrConfig,
 	logger golog.Logger,
-	// TODO(RSDK-2026) will be fixed once integration tests use this option in the next few PRs
-	//nolint:unparam
 	bufferSLAMProcessLogs bool,
 	success bool,
 	executableName string,
@@ -427,7 +425,7 @@ func createSLAMService(
 	test.That(t, sensorDeps, test.ShouldResemble, attrCfg.Sensors)
 
 	viamorbslam3.SetCameraValidationMaxTimeoutSecForTesting(1)
-	viamorbslam3.SetDialMaxTimeoutSecForTesting(1)
+	viamorbslam3.SetDialMaxTimeoutSecForTesting(2)
 
 	svc, err := viamorbslam3.New(ctx, deps, cfgService, logger, bufferSLAMProcessLogs, executableName)
 
