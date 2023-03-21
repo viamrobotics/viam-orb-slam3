@@ -236,13 +236,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 		t.Skip("Skipping test because orbslam hangs and failed to shut down")
 	}
 
-	// Don't clear out the directory, since we will re-use the config and data for the next run
+	// Don't clear out the directory, since we will re-use the config and data for the next run.
 	closeOutSLAMService(t, "")
 
-	// Added sleep to ensure orbslam stops
+	// Added sleep to ensure orbslam stops.
 	time.Sleep(time.Millisecond * orbSleepMsec)
 
-	// Test orbslam directory, should have two configs
+	// Test orbslam directory, should have two configs.
 	testOrbslamDir(t, name, expectedMapsOnline, 2)
 
 	// Delete the last image (or image pair) in the data directory so that offline mode runs on
