@@ -17,6 +17,7 @@ buf: bufsetup
 
 clean:
 	rm -rf grpc
+	rm -rf bin
 	rm -rf viam-orb-slam3/build
 	rm -rf viam-orb-slam3/ORB_SLAM3/build
 	rm -rf viam-orb-slam3/ORB_SLAM3/lib
@@ -72,6 +73,7 @@ endif
 
 build:
 	cd viam-orb-slam3 && ./scripts/build_orbslam.sh
+	mkdir -p bin && go build -o bin/orb-slam3-module module/main.go
 
 test-module-wrapper:
 	go test -race ./...
@@ -91,3 +93,12 @@ appimage: build
 	mv etc/packaging/appimages/*.AppImage* etc/packaging/appimages/deploy/
 	chmod 755 etc/packaging/appimages/deploy/*.AppImage
 
+appimage-module: build
+	cd etc/packaging/appimages && BUILD_CHANNEL=${BUILD_CHANNEL} appimage-builder --recipe orb-slam3-module-`uname -m`.yml
+	cd etc/packaging/appimages && ./package_release_orb.sh
+	mkdir -p etc/packaging/appimages/deploy/
+	mv etc/packaging/appimages/*.AppImage* etc/packaging/appimages/deploy/
+	chmod 755 etc/packaging/appimages/deploy/*.AppImage
+
+
+include *.make
