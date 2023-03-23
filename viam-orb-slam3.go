@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"context"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -83,6 +84,7 @@ func init() {
 			return New(ctx, deps, c, logger, false, DefaultExecutableName)
 		},
 	})
+    /*
 	config.RegisterServiceAttributeMapConverter(slam.Subtype, Model, func(attributes config.AttributeMap) (interface{}, error) {
 		var attrs slamConfig.AttrConfig
 		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{TagName: "json", Result: &attrs})
@@ -94,6 +96,16 @@ func init() {
 		}
 		return &attrs, nil
 	}, &slamConfig.AttrConfig{})
+    */
+   config.RegisterComponentAttributeMapConverter(
+		slam.Subtype,
+		Model,
+		func(attributes config.AttributeMap) (interface{}, error) {
+			var conf slamConfig.AttrConfig
+            log.Println("ZACK register component attr map converter")
+			return config.TransformAttributeMapToStruct(&conf, attributes)
+		},
+		&slamConfig.AttrConfig{})
 }
 
 // runtimeServiceValidation ensures the service's data processing and saving is valid for the mode and
