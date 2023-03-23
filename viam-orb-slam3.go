@@ -109,7 +109,7 @@ func init() {
                 return val,err
             }
             log.Println(conf)
-            return &conf,nil
+            return val,nil
 		},
 		&slamConfig.AttrConfig{})
 }
