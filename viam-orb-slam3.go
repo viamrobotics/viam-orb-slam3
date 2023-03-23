@@ -106,9 +106,10 @@ func init() {
             val,err:= config.TransformAttributeMapToStruct(&conf, attributes)
             if err != nil {
                 log.Println(err)
-                return nil,err
+                return val,err
             }
-            return val,nil
+            log.Println(conf)
+            return &conf,nil
 		},
 		&slamConfig.AttrConfig{})
 }
