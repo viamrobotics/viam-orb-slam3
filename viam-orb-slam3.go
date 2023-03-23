@@ -96,7 +96,7 @@ func init() {
 		return &attrs, nil
 	}, &slamConfig.AttrConfig{})
     */
-   config.RegisterComponentAttributeMapConverter(
+   config.RegisterServiceAttributeMapConverter(
 		slam.Subtype,
 		Model,
 		func(attributes config.AttributeMap) (interface{}, error) {
