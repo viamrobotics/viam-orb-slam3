@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/edaniels/golog"
-	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 	pb "go.viam.com/api/service/slam/v1"
