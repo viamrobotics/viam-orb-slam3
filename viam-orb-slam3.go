@@ -103,7 +103,12 @@ func init() {
 			var conf slamConfig.AttrConfig
             log.Println("ZACK register component attr map converter")
             log.Println(attributes)
-			return config.TransformAttributeMapToStruct(&conf, attributes)
+            val,err:= config.TransformAttributeMapToStruct(&conf, attributes)
+            if err != nil {
+                log.Println(err)
+                return nil,err
+            }
+            return val,nil
 		},
 		&slamConfig.AttrConfig{})
 }
