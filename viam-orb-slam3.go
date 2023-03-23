@@ -41,7 +41,7 @@ var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
 	// Model specifies the unique resource-triple across the rdk.
-	Model             = resource.NewModel("viam", "slam", "orbslamv3")
+	Model             = resource.NewModel("viam", "slam", "orbslam3")
 	supportedSubAlgos = []SubAlgo{Mono, Rgbd}
 )
 
