@@ -313,6 +313,10 @@ func (orbSvc *orbslamService) GetInternalState(ctx context.Context, name string)
 	return grpchelper.GetInternalStateCallback(ctx, name, orbSvc.clientAlgo)
 }
 
+func (orbSvc *orbslamService) Reconfigure(ctx context.Context, cfg config.Service) error {
+    return nil
+}
+
 // New returns a new slam service for the given robot.
 func New(ctx context.Context,
 	deps registry.Dependencies,
