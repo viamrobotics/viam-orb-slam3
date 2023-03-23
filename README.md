@@ -41,6 +41,20 @@ If you happened to use `git clone` only, you won't see the `ORB_SLAM3` folder an
 
 `git submodule update --init`
 
+#### (optional) Using Canon Images
+
+Once downloaded, you can enter the repo and create a docker container for building either an `arm64` or `amd64` binaries  using Viam's canon tool by running one of the following commands:
+
+```bash
+canon -arch arm64
+```
+
+```bash
+canon -arch amd64
+```
+
+These containers are set to persist between sessions via the `persistent` parameter in the `.canon.yaml` file located in the root of viam-orb-slam3. More details regarding the use of Viam's canon tool can be found [here](https://github.com/viamrobotics/canon).
+
 ### Setup, build, and run the binary
 
 ```bash
