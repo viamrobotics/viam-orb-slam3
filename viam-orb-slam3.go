@@ -95,7 +95,6 @@ func init() {
 		}
 		return &attrs, nil
 	}, &slamConfig.AttrConfig{})
-    */
    config.RegisterComponentAttributeMapConverter(
 		slam.Subtype,
 		Model,
@@ -112,6 +111,7 @@ func init() {
             return &conf,nil
 		},
 		&slamConfig.AttrConfig{})
+        */
 }
 
 // runtimeServiceValidation ensures the service's data processing and saving is valid for the mode and
@@ -324,10 +324,15 @@ func New(ctx context.Context,
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()
 
+    svcConfig, err := slamConfig.NewAttrConfig(config)
+    if err != nil {
+        return nil, err
+    }
+    /*
 	svcConfig, ok := config.ConvertedAttributes.(*slamConfig.AttrConfig)
 	if !ok {
 		return nil, rdkutils.NewUnexpectedTypeError(svcConfig, config.ConvertedAttributes)
-	}
+	}*/
 
 	primarySensorName, cams, err := configureCameras(ctx, svcConfig, deps, logger)
 	if err != nil {
