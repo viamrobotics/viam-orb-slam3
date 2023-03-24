@@ -84,25 +84,11 @@ func init() {
 			return New(ctx, deps, c, logger, false, DefaultExecutableName)
 		},
 	})
-    /*
-	config.RegisterServiceAttributeMapConverter(slam.Subtype, Model, func(attributes config.AttributeMap) (interface{}, error) {
-		var attrs slamConfig.AttrConfig
-		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{TagName: "json", Result: &attrs})
-		if err != nil {
-			return nil, err
-		}
-		if err := decoder.Decode(attributes); err != nil {
-			return nil, err
-		}
-		return &attrs, nil
-	}, &slamConfig.AttrConfig{})
-    */
    config.RegisterServiceAttributeMapConverter(
 		slam.Subtype,
 		Model,
 		func(attributes config.AttributeMap) (interface{}, error) {
 			var conf slamConfig.AttrConfig
-            log.Println("ZACK -- register")
             return config.TransformAttributeMapToStruct(&conf, attributes)
 		},
 		&slamConfig.AttrConfig{})
@@ -322,9 +308,15 @@ func New(ctx context.Context,
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()
 
+    /*
     svcConfig := &slamConfig.AttrConfig{}
      config.TransformAttributeMapToStruct(svcConfig, configService.Attributes)
      logger.Errorln(svcConfig)
+     */
+svcConfig, ok := configService.ConvertedAttributes.(*slamConfig.AttrConfig)
+	if !ok {
+		return nil, rdkutils.NewUnexpectedTypeError(svcConfig, configService.ConvertedAttributes)
+	}
      
 
 	primarySensorName, cams, err := configureCameras(ctx, svcConfig, deps, logger)
