@@ -334,6 +334,8 @@ func New(ctx context.Context,
     }
     */
     logger.Errorln("ZACK -- new -- entered")
+    logger.Errorln(config.Attributes)
+    logger.Errorln(config.ConvertedAttributes)
 	svcConfig, ok := config.ConvertedAttributes.(*slamConfig.AttrConfig)
 	if !ok {
         logger.Errorln("ZACK -- new -- unexpected type error")
