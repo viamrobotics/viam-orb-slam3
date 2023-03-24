@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"context"
 	"io"
+    "log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -79,6 +80,7 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 func init() {
 	registry.RegisterService(slam.Subtype, Model, registry.Service{
 		Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
+            log.Println("ZACK -- new register service")
 			return New(ctx, deps, c, logger, false, DefaultExecutableName)
 		},
 	})
@@ -100,6 +102,7 @@ func init() {
 		Model,
 		func(attributes config.AttributeMap) (interface{}, error) {
 			var conf slamConfig.AttrConfig
+            log.Println("ZACK -- register")
             return config.TransformAttributeMapToStruct(&conf, attributes)
 		},
 		&slamConfig.AttrConfig{})
@@ -318,13 +321,7 @@ func New(ctx context.Context,
 ) (slam.Service, error) {
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()
-/*
-    svcConfig, err := slamConfig.NewAttrConfig(config)
-    if err != nil {
-        return nil, err
-    }
-    */
-    logger.Errorln("ZACK -- new -- entered")
+
     svcConfig := &slamConfig.AttrConfig{}
      config.TransformAttributeMapToStruct(svcConfig, configService.Attributes)
      logger.Errorln(svcConfig)
