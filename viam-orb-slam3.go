@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"context"
 	"io"
-    "log"
 	"os"
 	"path/filepath"
 	"strconv"
