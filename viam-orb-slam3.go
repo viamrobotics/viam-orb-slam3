@@ -101,15 +101,7 @@ func init() {
 		Model,
 		func(attributes config.AttributeMap) (interface{}, error) {
 			var conf slamConfig.AttrConfig
-            log.Println("ZACK register component attr map converter")
-            log.Println(attributes)
-            val,err:= config.TransformAttributeMapToStruct(&conf, attributes)
-            if err != nil {
-                log.Println(err)
-                return val,err
-            }
-            log.Println(conf)
-            return val,nil
+            return config.TransformAttributeMapToStruct(&conf, attributes)
 		},
 		&slamConfig.AttrConfig{})
 }
@@ -320,7 +312,7 @@ func (orbSvc *orbslamService) Reconfigure(ctx context.Context, cfg config.Servic
 // New returns a new slam service for the given robot.
 func New(ctx context.Context,
 	deps registry.Dependencies,
-	config config.Service,
+	configService config.Service,
 	logger golog.Logger,
 	bufferSLAMProcessLogs bool,
 	executableName string,
@@ -334,13 +326,10 @@ func New(ctx context.Context,
     }
     */
     logger.Errorln("ZACK -- new -- entered")
-    logger.Errorln(config.Attributes)
-    logger.Errorln(config.ConvertedAttributes)
-	svcConfig, ok := config.ConvertedAttributes.(*slamConfig.AttrConfig)
-	if !ok {
-        logger.Errorln("ZACK -- new -- unexpected type error")
-		return nil, rdkutils.NewUnexpectedTypeError(svcConfig, config.ConvertedAttributes)
-	}
+    svcConfig := &slamConfig.AttrConfig{}
+     config.TransformAttributeMapToStruct(svcConfig, configService.Attributes)
+     logger.Errorln(svcConfig)
+     
 
 	primarySensorName, cams, err := configureCameras(ctx, svcConfig, deps, logger)
 	if err != nil {
@@ -350,7 +339,7 @@ func New(ctx context.Context,
 	subAlgo := SubAlgo(svcConfig.ConfigParams["mode"])
 	if !slices.Contains(supportedSubAlgos, subAlgo) {
 		return nil, errors.Errorf("%v does not have a mode %v",
-			config.Model.Name, svcConfig.ConfigParams["mode"])
+			configService.Model.Name, svcConfig.ConfigParams["mode"])
 	}
 
 	if err = slamConfig.SetupDirectories(svcConfig.DataDirectory, logger); err != nil {
