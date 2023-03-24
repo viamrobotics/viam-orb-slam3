@@ -333,8 +333,10 @@ func New(ctx context.Context,
         return nil, err
     }
     */
+    logger.Errorln("ZACK -- new -- entered")
 	svcConfig, ok := config.ConvertedAttributes.(*slamConfig.AttrConfig)
 	if !ok {
+        logger.Errorln("ZACK -- new -- unexpected type error")
 		return nil, rdkutils.NewUnexpectedTypeError(svcConfig, config.ConvertedAttributes)
 	}
 
