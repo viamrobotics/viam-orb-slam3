@@ -189,6 +189,8 @@ func configureCameras(ctx context.Context,
 		if err != nil {
 			return "", nil, errors.Wrapf(err, "error getting camera %v for slam service", primarySensorName)
 		}
+        logger.Errorln("ZACK -- deps")
+        logger.Errorln(deps)
 		proj, err := cam.Projector(ctx)
 		if err != nil {
 			return "", nil, errors.Wrap(err,
