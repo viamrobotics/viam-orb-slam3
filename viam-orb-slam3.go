@@ -194,7 +194,7 @@ func configureCameras(ctx context.Context,
 		proj, err := cam.Projector(ctx)
 		if err != nil {
 			return "", nil, errors.Wrap(err,
-				"Unable to get camera features for first camera, make sure the color camera is listed first")
+				"Unable to get camera features for first camera, make sure the chicken camera is listed first")
 		}
 
 		intrinsics, ok := proj.(*transform.PinholeCameraIntrinsics)
