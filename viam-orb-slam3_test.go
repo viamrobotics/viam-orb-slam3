@@ -9,7 +9,6 @@ import (
 	"image"
 	"os"
 	"strconv"
-	"sync"
 	"testing"
 
 	"github.com/edaniels/golog"
@@ -36,10 +35,6 @@ const (
 )
 
 var (
-	orbslamIntCameraMutex             sync.Mutex
-	orbslamIntCameraReleaseImagesChan = make(chan int, 2)
-	orbslamIntWebcamReleaseImageChan  = make(chan int, 1)
-	orbslamIntSynchronizeCamerasChan  = make(chan int)
 	validMapRate                      = 200
 	_true                             = true
 	_false                            = false

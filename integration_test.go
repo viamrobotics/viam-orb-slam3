@@ -55,17 +55,17 @@ func createVocabularyFile(name string) error {
 func releaseImages(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	switch subAlgo {
 	case viamorbslam3.Mono:
-		orbslamIntWebcamReleaseImageChan <- 1
+		testhelper.IntWebcamReleaseImageChan <- 1
 	case viamorbslam3.Rgbd:
 		for {
-			orbslamIntCameraMutex.Lock()
-			if len(orbslamIntCameraReleaseImagesChan) == cap(orbslamIntCameraReleaseImagesChan) {
-				orbslamIntCameraMutex.Unlock()
+			testhelper.IntCameraMutex.Lock()
+			if len(testhelper.IntCameraReleaseImagesChan) == cap(testhelper.IntCameraReleaseImagesChan) {
+				testhelper.IntCameraMutex.Unlock()
 				time.Sleep(10 * time.Millisecond)
 			} else {
-				orbslamIntCameraReleaseImagesChan <- 1
-				orbslamIntCameraReleaseImagesChan <- 1
-				orbslamIntCameraMutex.Unlock()
+				testhelper.IntCameraReleaseImagesChan <- 1
+				testhelper.IntCameraReleaseImagesChan <- 1
+				testhelper.IntCameraMutex.Unlock()
 				return
 			}
 		}

@@ -39,18 +39,18 @@ import (
 )
 
 var (
-	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
-	dialMaxTimeoutSec             = 30 // reconfigurable for testing
 	// Model specifies the unique resource-triple across the rdk.
 	Model             = resource.NewModel("viam", "slam", "orbslamv3")
 	supportedSubAlgos = []SubAlgo{Mono, Rgbd}
 )
 
 const (
-	defaultDataRateMsec         = 200
-	defaultMapRateSec           = 60
-	cameraValidationIntervalSec = 1.
-	parsePortMaxTimeoutSec      = 60
+	defaultCameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
+	defaultDialMaxTimeoutSec             = 30 // reconfigurable for testing
+	defaultCameraValidationIntervalSec   = 1.
+	defaultDataRateMsec                  = 200
+	defaultMapRateSec                    = 60
+	parsePortMaxTimeoutSec               = 60
 	// time format for the slam service.
 	opTimeoutErrorMessage = "bad scan: OpTimeout"
 	localhost0            = "localhost:0"
@@ -68,20 +68,19 @@ const (
 	Rgbd SubAlgo = "rgbd"
 )
 
-// SetCameraValidationMaxTimeoutSecForTesting sets cameraValidationMaxTimeoutSec for testing.
-func SetCameraValidationMaxTimeoutSecForTesting(val int) {
-	cameraValidationMaxTimeoutSec = val
-}
-
-// SetDialMaxTimeoutSecForTesting sets dialMaxTimeoutSec for testing.
-func SetDialMaxTimeoutSecForTesting(val int) {
-	dialMaxTimeoutSec = val
-}
-
 func init() {
 	registry.RegisterService(slam.Subtype, Model, registry.Service{
 		Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
-			return New(ctx, deps, c, logger, false, DefaultExecutableName)
+			return New(ctx,
+				deps,
+				c,
+				logger,
+				false,
+				DefaultExecutableName,
+				defaultCameraValidationMaxTimeoutSec,
+				defaultCameraValidationIntervalSec,
+				defaultDialMaxTimeoutSec,
+			)
 		},
 	})
 	config.RegisterServiceAttributeMapConverter(slam.Subtype, Model, func(attributes config.AttributeMap) (interface{}, error) {
@@ -279,12 +278,16 @@ func (orbSvc *orbslamService) GetInternalStateStream(ctx context.Context, name s
 }
 
 // New returns a new slam service for the given robot.
-func New(ctx context.Context,
+func New(
+	ctx context.Context,
 	deps registry.Dependencies,
 	config config.Service,
 	logger golog.Logger,
 	bufferSLAMProcessLogs bool,
 	executableName string,
+	sensorValidationMaxTimeoutSec int,
+	sensorValidationIntervalSec int,
+	dialMaxTimeoutSec int,
 ) (slam.Service, error) {
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()

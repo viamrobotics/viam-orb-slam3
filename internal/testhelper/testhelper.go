@@ -44,6 +44,12 @@ var (
 	IntSynchronizeCamerasChan  = make(chan int)
 )
 
+const (
+    SensorValidationMaxTimeoutSecForTest = 1
+    SensorValidationIntervalSecForTest = 1
+    DialMaxTimeoutSecForTest = 2
+)
+
 func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 	deps := make(registry.Dependencies)
 	var projA transform.Projector
@@ -251,7 +257,7 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 						}),
 					), nil
 				default:
-					return nil, errors.Errorf("Color camera not ready to return image %v", index)
+					return nil, errors.Errorf("Color camera not ready to return image %v", atomic.LoadUint64(&index))
 				}
 			}
 			deps[camera.Named(sensor)] = cam
@@ -290,7 +296,7 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 						}),
 					), nil
 				default:
-					return nil, errors.Errorf("Depth camera not ready to return image %v", index)
+					return nil, errors.Errorf("Depth camera not ready to return image %v", atomic.LoadUint64(&index))
 				}
 			}
 			deps[camera.Named(sensor)] = cam
@@ -328,7 +334,7 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 						}),
 					), nil
 				default:
-					return nil, errors.Errorf("Webcam not ready to return image %v", index)
+					return nil, errors.Errorf("Webcam not ready to return image %v", atomic.LoadUint64(&index))
 				}
 			}
 			deps[camera.Named(sensor)] = cam
@@ -370,7 +376,7 @@ func GetNumOrbslamImages(mode viamorbslam3.SubAlgo) int {
 	}
 }
 
-func CloseOutSLAMService(t *testing.T, name string) {
+func ClearDirectory(t *testing.T, name string) {
 	t.Helper()
 
 	if name != "" {
@@ -392,10 +398,7 @@ func CreateSLAMService(
 	t *testing.T,
 	attrCfg *slamConfig.AttrConfig,
 	logger golog.Logger,
-	// TODO(RSDK-2026) will be fixed once integration tests use this option in the next few PRs
-	//nolint:unparam
 	bufferSLAMProcessLogs bool,
-	success bool,
 	executableName string,
 ) (slam.Service, error) {
 	t.Helper()
@@ -412,21 +415,26 @@ func CreateSLAMService(
 	}
 	test.That(t, sensorDeps, test.ShouldResemble, attrCfg.Sensors)
 
-	viamorbslam3.SetCameraValidationMaxTimeoutSecForTesting(1)
-	viamorbslam3.SetDialMaxTimeoutSecForTesting(1)
 
-	svc, err := viamorbslam3.New(ctx, deps, cfgService, logger, bufferSLAMProcessLogs, executableName)
+	svc, err := viamorbslam3.New(
+        ctx,
+        deps,
+        cfgService,
+        logger,
+        bufferSLAMProcessLogs,
+        executableName,
+        SensorValidationMaxTimeoutSecForTest,
+        SensorValidationIntervalSecForTest,
+        DialMaxTimeoutSecForTest,
+    )
 
-	if success {
-		if err != nil {
-			return nil, err
-		}
-		test.That(t, svc, test.ShouldNotBeNil)
-		return svc, nil
-	}
+    if err != nil {
+        test.That(t, svc, test.ShouldNotBeNil)
+        return nil, err
+    }
 
-	test.That(t, svc, test.ShouldBeNil)
-	return nil, err
+	test.That(t, svc, test.ShouldNotBeNil)
+	return svc, err
 }
 
 // Service in the internal package includes additional exported functions relating to the data and
