@@ -6,7 +6,7 @@ import (
 	"bufio"
 	"context"
 	"io"
-    "log"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -80,16 +80,16 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 func init() {
 	registry.RegisterService(slam.Subtype, Model, registry.Service{
 		Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
-            log.Println("ZACK -- new register service")
+			log.Println("ZACK -- new register service")
 			return New(ctx, deps, c, logger, false, DefaultExecutableName)
 		},
 	})
-   config.RegisterServiceAttributeMapConverter(
+	config.RegisterServiceAttributeMapConverter(
 		slam.Subtype,
 		Model,
 		func(attributes config.AttributeMap) (interface{}, error) {
 			var conf slamConfig.AttrConfig
-            return config.TransformAttributeMapToStruct(&conf, attributes)
+			return config.TransformAttributeMapToStruct(&conf, attributes)
 		},
 		&slamConfig.AttrConfig{})
 }
@@ -189,8 +189,8 @@ func configureCameras(ctx context.Context,
 		if err != nil {
 			return "", nil, errors.Wrapf(err, "error getting camera %v for slam service", primarySensorName)
 		}
-        logger.Errorln("ZACK -- deps")
-        logger.Errorln(deps)
+		logger.Errorln("ZACK -- deps")
+		logger.Errorln(deps)
 		proj, err := cam.Projector(ctx)
 		if err != nil {
 			return "", nil, errors.Wrap(err,
@@ -296,7 +296,7 @@ func (orbSvc *orbslamService) GetInternalState(ctx context.Context, name string)
 }
 
 func (orbSvc *orbslamService) Reconfigure(ctx context.Context, cfg config.Service) error {
-    return nil
+	return nil
 }
 
 // New returns a new slam service for the given robot.
@@ -310,16 +310,15 @@ func New(ctx context.Context,
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()
 
-    /*
-    svcConfig := &slamConfig.AttrConfig{}
-     config.TransformAttributeMapToStruct(svcConfig, configService.Attributes)
-     logger.Errorln(svcConfig)
-     */
-svcConfig, ok := configService.ConvertedAttributes.(*slamConfig.AttrConfig)
+	/*
+	   svcConfig := &slamConfig.AttrConfig{}
+	    config.TransformAttributeMapToStruct(svcConfig, configService.Attributes)
+	    logger.Errorln(svcConfig)
+	*/
+	svcConfig, ok := configService.ConvertedAttributes.(*slamConfig.AttrConfig)
 	if !ok {
 		return nil, rdkutils.NewUnexpectedTypeError(svcConfig, configService.ConvertedAttributes)
 	}
-     
 
 	primarySensorName, cams, err := configureCameras(ctx, svcConfig, deps, logger)
 	if err != nil {
