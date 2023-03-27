@@ -12,11 +12,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rhysd/actionlint v1.6.23
 	go.opencensus.io v0.24.0
-	go.viam.com/api v0.1.89
-	go.viam.com/rdk v0.2.25-0.20230314192306-5309d56cd488
+	go.viam.com/api v0.1.96
+	go.viam.com/rdk v0.2.31-0.20230327150047-297e659368f5
 	go.viam.com/slam v0.1.32-0.20230315154454-6c1e77a1e31b
 	go.viam.com/test v1.1.1-0.20220909204145-f61b7c01c33e
-	go.viam.com/utils v0.1.15
+	go.viam.com/utils v0.1.18-0.20230327140716-bfeb34d89117
 	google.golang.org/grpc v1.53.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -201,7 +201,7 @@ require (
 	github.com/pion/interceptor v0.1.12 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/mdns v0.0.7 // indirect
-	github.com/pion/mediadevices v0.4.0 // indirect
+	github.com/pion/mediadevices v0.4.1-0.20230320003250-11bf55f80ca8 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/rtcp v1.2.10 // indirect
 	github.com/pion/rtp v1.7.13 // indirect
@@ -251,7 +251,7 @@ require (
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/stretchr/testify v1.8.1 // indirect
+	github.com/stretchr/testify v1.8.2 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/t-yuki/gocover-cobertura v0.0.0-20180217150009-aaee18c8195c // indirect
 	github.com/tdakkota/asciicheck v0.1.1 // indirect
@@ -283,7 +283,7 @@ require (
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230203172020-98cc5a0785f9 // indirect
-	golang.org/x/image v0.3.0 // indirect
+	golang.org/x/image v0.5.0 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect

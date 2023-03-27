@@ -745,10 +745,6 @@ func TestEndpointFailures(t *testing.T) {
 	svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
-	p, err := svc.Position(context.Background(), "hi", map[string]interface{}{})
-	test.That(t, p, test.ShouldBeNil)
-	test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "error getting SLAM position")
-
 	pNew, frame, err := svc.GetPosition(context.Background(), "hi")
 	test.That(t, pNew, test.ShouldBeNil)
 	test.That(t, frame, test.ShouldBeEmpty)
@@ -757,16 +753,6 @@ func TestEndpointFailures(t *testing.T) {
 	pose := spatial.NewPose(r3.Vector{X: 1, Y: 2, Z: 3},
 		&spatial.OrientationVector{Theta: math.Pi / 2, OX: 0, OY: 0, OZ: -1})
 	cp := referenceframe.NewPoseInFrame("frame", pose)
-
-	mimeType, im, pc, err := svc.GetMap(context.Background(), "hi", rdkutils.MimeTypePCD, cp, true, map[string]interface{}{})
-	test.That(t, mimeType, test.ShouldResemble, "")
-	test.That(t, im, test.ShouldBeNil)
-	test.That(t, pc, test.ShouldBeNil)
-	test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "error getting SLAM map")
-
-	internalState, err := svc.GetInternalState(context.Background(), "hi")
-	test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "error getting the internal state from the SLAM client")
-	test.That(t, internalState, test.ShouldBeNil)
 
 	callbackPointCloud, err := svc.GetPointCloudMapStream(context.Background(), "hi")
 	test.That(t, err, test.ShouldBeNil)
