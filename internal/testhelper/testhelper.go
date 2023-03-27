@@ -216,7 +216,7 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 				}, nil
 			}
 			deps[camera.Named(sensor)] = cam
-		case "int_color_camera":
+		case "orbslam_int_color_camera":
 			cam.NextPointCloudFunc = func(ctx context.Context) (pointcloud.PointCloud, error) {
 				return nil, errors.New("camera not lidar")
 			}
@@ -231,7 +231,7 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 				defer func() {
 					IntSynchronizeCamerasChan <- 1
 				}()
-				// Ensure the StreamFunc functions for int_color_camera and int_depth_camera run under
+				// Ensure the StreamFunc functions for orbslam_int_color_camera and orbslam_int_depth_camera run under
 				// the lock so that they release images in the same call to getSimultaneousColorAndDepth().
 				IntCameraMutex.Lock()
 				select {
@@ -255,7 +255,7 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 				}
 			}
 			deps[camera.Named(sensor)] = cam
-		case "int_depth_camera":
+		case "orbslam_int_depth_camera":
 			cam.NextPointCloudFunc = func(ctx context.Context) (pointcloud.PointCloud, error) {
 				return nil, errors.New("camera not lidar")
 			}
@@ -270,7 +270,7 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 				defer func() {
 					IntCameraMutex.Unlock()
 				}()
-				// Ensure StreamFunc for int_color_camera runs first, so that we lock orbslamIntCameraMutex before
+				// Ensure StreamFunc for orbslam_int_color_camera runs first, so that we lock orbslamIntCameraMutex before
 				// unlocking it
 				<-IntSynchronizeCamerasChan
 				select {
@@ -294,7 +294,7 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 				}
 			}
 			deps[camera.Named(sensor)] = cam
-		case "int_webcam":
+		case "orbslam_int_webcam":
 			cam.NextPointCloudFunc = func(ctx context.Context) (pointcloud.PointCloud, error) {
 				return nil, errors.New("camera not lidar")
 			}
