@@ -130,7 +130,7 @@ func testOrbslamInternalState(t *testing.T, svc slam.Service, dataDir string) {
 
 	// Save the data from the call to GetInternalStateStream for use in next test.
 	timeStamp := time.Now()
-	filename := filepath.Join(dataDir, "map", "orbslam_int_color_camera_data_"+timeStamp.UTC().Format(dataprocess.SlamTimeFormat)+".osa")
+	filename := filepath.Join(dataDir, "map", "int_color_camera_data_"+timeStamp.UTC().Format(dataprocess.SlamTimeFormat)+".osa")
 	err = os.WriteFile(filename, internalStateStream, 0o644)
 	test.That(t, err, test.ShouldBeNil)
 }
@@ -153,12 +153,12 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	var expectedMapsOnline, expectedMapsOffline, expectedMapsApriori int
 	switch subAlgo {
 	case viamorbslam3.Mono:
-		sensors = []string{"orbslam_int_webcam"}
+		sensors = []string{"int_webcam"}
 		expectedMapsOnline = 0
 		expectedMapsOffline = 1
 		expectedMapsApriori = expectedMapsOnline + 1
 	case viamorbslam3.Rgbd:
-		sensors = []string{"orbslam_int_color_camera", "orbslam_int_depth_camera"}
+		sensors = []string{"int_color_camera", "int_depth_camera"}
 		expectedMapsOnline = 5
 		expectedMapsOffline = 1
 		expectedMapsApriori = expectedMapsOnline + 1

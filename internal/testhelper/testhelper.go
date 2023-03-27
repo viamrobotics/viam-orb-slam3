@@ -294,7 +294,7 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 				}
 			}
 			deps[camera.Named(sensor)] = cam
-		case "orbslam_int_webcam":
+		case "int_webcam":
 			cam.NextPointCloudFunc = func(ctx context.Context) (pointcloud.PointCloud, error) {
 				return nil, errors.New("camera not lidar")
 			}
