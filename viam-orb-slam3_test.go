@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"image"
-	"math"
 	"net"
 	"os"
 	"strconv"
@@ -18,17 +17,14 @@ import (
 
 	"github.com/edaniels/golog"
 	"github.com/edaniels/gostream"
-	"github.com/golang/geo/r3"
 	"github.com/pkg/errors"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/config"
 	"go.viam.com/rdk/pointcloud"
-	"go.viam.com/rdk/referenceframe"
 	"go.viam.com/rdk/registry"
 	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam"
-	spatial "go.viam.com/rdk/spatialmath"
 	"go.viam.com/rdk/testutils/inject"
 	rdkutils "go.viam.com/rdk/utils"
 	slamConfig "go.viam.com/slam/config"
@@ -749,10 +745,6 @@ func TestEndpointFailures(t *testing.T) {
 	test.That(t, pNew, test.ShouldBeNil)
 	test.That(t, frame, test.ShouldBeEmpty)
 	test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "error getting SLAM position")
-
-	pose := spatial.NewPose(r3.Vector{X: 1, Y: 2, Z: 3},
-		&spatial.OrientationVector{Theta: math.Pi / 2, OX: 0, OY: 0, OZ: -1})
-	cp := referenceframe.NewPoseInFrame("frame", pose)
 
 	callbackPointCloud, err := svc.GetPointCloudMapStream(context.Background(), "hi")
 	test.That(t, err, test.ShouldBeNil)
