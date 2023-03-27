@@ -3,7 +3,7 @@
 package testhelper
 
 import (
-    "context"
+	"context"
 	"image"
 	"net"
 	"os"
@@ -16,8 +16,8 @@ import (
 	"github.com/pkg/errors"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/config"
-	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/pointcloud"
+	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam"
 	"go.viam.com/rdk/testutils/inject"
@@ -29,7 +29,7 @@ import (
 	"google.golang.org/grpc"
 
 	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
-	
+
 	"bufio"
 	"bytes"
 	"go.viam.com/rdk/registry"
@@ -43,7 +43,6 @@ var (
 	IntWebcamReleaseImageChan  = make(chan int, 1)
 	IntSynchronizeCamerasChan  = make(chan int)
 )
-
 
 func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 	deps := make(registry.Dependencies)
@@ -388,8 +387,6 @@ func SetupTestGRPCServer(tb testing.TB) (*grpc.Server, int) {
 
 	return grpcServer, listener.Addr().(*net.TCPAddr).Port
 }
-
-
 
 func CreateSLAMService(
 	t *testing.T,
