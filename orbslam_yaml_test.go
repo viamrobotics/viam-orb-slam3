@@ -19,6 +19,7 @@ import (
 	slamConfig "go.viam.com/slam/config"
 	"go.viam.com/slam/dataprocess"
 	slamTesthelper "go.viam.com/slam/testhelper"
+    "github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 	"go.viam.com/test"
 	"go.viam.com/utils"
 	"gopkg.in/yaml.v2"
@@ -115,10 +116,10 @@ func TestOrbslamYAMLNew(t *testing.T) {
 	var fakeMapTimestamp string
 	t.Run("New orbslamv3 service with good camera and defined params", func(t *testing.T) {
 		// Create slam service
-		grpcServer, port := setupTestGRPCServer(t)
+		grpcServer, port := testhelper.SetupTestGRPCServer(t)
 		attrCfgGood.Port = "localhost:" + strconv.Itoa(port)
 
-		svc, err := createSLAMService(t, attrCfgGood, logger, false, true, testExecutableName)
+		svc, err := testhelper.CreateSLAMService(t, attrCfgGood, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -152,10 +153,10 @@ func TestOrbslamYAMLNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service with previous map and good camera", func(t *testing.T) {
 		// Create slam service
-		grpcServer, port := setupTestGRPCServer(t)
+		grpcServer, port := testhelper.SetupTestGRPCServer(t)
 		attrCfgGood.Port = "localhost:" + strconv.Itoa(port)
 
-		svc, err := createSLAMService(t, attrCfgGood, logger, false, true, testExecutableName)
+		svc, err := testhelper.CreateSLAMService(t, attrCfgGood, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -178,10 +179,10 @@ func TestOrbslamYAMLNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service with high dataRateMs", func(t *testing.T) {
 		// Create slam service
-		grpcServer, port := setupTestGRPCServer(t)
+		grpcServer, port := testhelper.SetupTestGRPCServer(t)
 		attrCfgGoodHighDataRateMsec.Port = "localhost:" + strconv.Itoa(port)
 
-		svc, err := createSLAMService(t, attrCfgGoodHighDataRateMsec, logger, false, true, testExecutableName)
+		svc, err := testhelper.CreateSLAMService(t, attrCfgGoodHighDataRateMsec, logger, false, true, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -207,7 +208,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service with camera that errors from bad intrinsics", func(t *testing.T) {
 		// Create slam service
-		_, err := createSLAMService(t, attrCfgBadCam, logger, false, false, testExecutableName)
+		_, err := testhelper.CreateSLAMService(t, attrCfgBadCam, logger, false, false, testExecutableName)
 
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			transform.NewNoIntrinsicsError(fmt.Sprintf("Invalid size (%#v, %#v)", 0, 0)).Error())
@@ -231,7 +232,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 			UseLiveData:   &useLiveData,
 		}
 		// Create slam service
-		_, err := createSLAMService(t, attrCfgBadParam1, logger, false, false, testExecutableName)
+		_, err := testhelper.CreateSLAMService(t, attrCfgBadParam1, logger, false, false, testExecutableName)
 		test.That(t, err.Error(), test.ShouldContainSubstring, "Parameter orb_n_features has an invalid definition")
 
 		attrCfgBadParam2 := &slamConfig.AttrConfig{
@@ -249,10 +250,10 @@ func TestOrbslamYAMLNew(t *testing.T) {
 			Port:          "localhost:4445",
 			UseLiveData:   &useLiveData,
 		}
-		_, err = createSLAMService(t, attrCfgBadParam2, logger, false, false, testExecutableName)
+		_, err = testhelper.CreateSLAMService(t, attrCfgBadParam2, logger, false, false, testExecutableName)
 
 		test.That(t, err.Error(), test.ShouldContainSubstring, "Parameter orb_scale_factor has an invalid definition")
 	})
 
-	closeOutSLAMService(t, name)
+	testhelper.CloseOutSLAMService(t, name)
 }

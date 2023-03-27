@@ -4,9 +4,7 @@ package testhelper
 
 import (
     "context"
-	"fmt"
 	"image"
-	"math"
 	"net"
 	"os"
 	"strconv"
@@ -15,22 +13,18 @@ import (
 
 	"github.com/edaniels/golog"
 	"github.com/edaniels/gostream"
-	"github.com/golang/geo/r3"
 	"github.com/pkg/errors"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/config"
-	"go.viam.com/rdk/referenceframe"
 	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/pointcloud"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam"
-	spatial "go.viam.com/rdk/spatialmath"
 	"go.viam.com/rdk/testutils/inject"
 	rdkutils "go.viam.com/rdk/utils"
 	slamConfig "go.viam.com/slam/config"
 	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
-	"go.viam.com/utils"
 	"go.viam.com/utils/artifact"
 	"google.golang.org/grpc"
 
@@ -113,13 +107,13 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 			}
 			deps[camera.Named(sensor)] = cam
 		case "good_camera":
-			cam = getGoodOrMissingDistortionParamsCamera(projA)
+			cam = GetGoodOrMissingDistortionParamsCamera(projA)
 			cam.PropertiesFunc = func(ctx context.Context) (camera.Properties, error) {
 				return camera.Properties{IntrinsicParams: intrinsicsA, DistortionParams: distortionsA}, nil
 			}
 			deps[camera.Named(sensor)] = cam
 		case "missing_distortion_parameters_camera":
-			cam = getGoodOrMissingDistortionParamsCamera(projA)
+			cam = GetGoodOrMissingDistortionParamsCamera(projA)
 			cam.PropertiesFunc = func(ctx context.Context) (camera.Properties, error) {
 				return camera.Properties{IntrinsicParams: intrinsicsA, DistortionParams: nil}, nil
 			}
@@ -275,15 +269,15 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 			var index uint64
 			cam.StreamFunc = func(ctx context.Context, errHandlers ...gostream.ErrorHandler) (gostream.VideoStream, error) {
 				defer func() {
-					orbslamIntCameraMutex.Unlock()
+					IntCameraMutex.Unlock()
 				}()
 				// Ensure StreamFunc for int_color_camera runs first, so that we lock orbslamIntCameraMutex before
 				// unlocking it
-				<-orbslamIntSynchronizeCamerasChan
+				<-IntSynchronizeCamerasChan
 				select {
-				case <-orbslamIntCameraReleaseImagesChan:
+				case <-IntCameraReleaseImagesChan:
 					i := atomic.AddUint64(&index, 1) - 1
-					if i >= uint64(getNumOrbslamImages(viamorbslam3.Rgbd)) {
+					if i >= uint64(GetNumOrbslamImages(viamorbslam3.Rgbd)) {
 						return nil, errors.New("No more orbslam depth images")
 					}
 					imgBytes, err := os.ReadFile(artifact.MustPath("slam/mock_camera_short/depth/" + strconv.FormatUint(i, 10) + ".png"))
@@ -314,9 +308,9 @@ func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
 			var index uint64
 			cam.StreamFunc = func(ctx context.Context, errHandlers ...gostream.ErrorHandler) (gostream.VideoStream, error) {
 				select {
-				case <-orbslamIntWebcamReleaseImageChan:
+				case <-IntWebcamReleaseImageChan:
 					i := atomic.AddUint64(&index, 1) - 1
-					if i >= uint64(getNumOrbslamImages(viamorbslam3.Mono)) {
+					if i >= uint64(GetNumOrbslamImages(viamorbslam3.Mono)) {
 						return nil, errors.New("No more orbslam webcam images")
 					}
 					imgBytes, err := os.ReadFile(artifact.MustPath("slam/mock_mono_camera/rgb/" + strconv.FormatUint(i, 10) + ".png"))
