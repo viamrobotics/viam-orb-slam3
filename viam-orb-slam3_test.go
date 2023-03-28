@@ -102,7 +102,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		svc, err := testhelper.CreateSLAMService(t, attrCfg, logger, false, true, testExecutableName)
+		svc, err := testhelper.CreateSLAMService(t, attrCfg, logger, false, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -119,7 +119,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		_, err = testhelper.CreateSLAMService(t, attrCfg, logger, false, false, testExecutableName)
+		_, err = testhelper.CreateSLAMService(t, attrCfg, logger, false, testExecutableName)
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			errors.Errorf("expected 2 cameras for Rgbd slam, found %v", len(attrCfg.Sensors)).Error())
 	})
@@ -136,7 +136,7 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		svc, err := testhelper.CreateSLAMService(t, attrCfg, logger, false, true, testExecutableName)
+		svc, err := testhelper.CreateSLAMService(t, attrCfg, logger, false, testExecutableName)
 		expectedError := errors.New("configuring camera error: error getting distortion_parameters for slam " +
 			"service, only BrownConrady distortion parameters are supported").Error()
 		test.That(t, err.Error(), test.ShouldContainSubstring, expectedError)
@@ -158,7 +158,7 @@ func TestORBSLAMNew(t *testing.T) {
 
 		// Create slam service
 		logger := golog.NewTestLogger(t)
-		svc, err := testhelper.CreateSLAMService(t, attrCfg, logger, false, true, testExecutableName)
+		svc, err := testhelper.CreateSLAMService(t, attrCfg, logger, false, testExecutableName)
 		expectedError := errors.New("configuring camera error: error getting camera properties for slam " +
 			"service: somehow couldn't get properties").Error()
 		test.That(t, err.Error(), test.ShouldContainSubstring, expectedError)

@@ -102,6 +102,8 @@ func runtimeServiceValidation(
 	ctx context.Context,
 	cams []camera.Camera,
 	orbSvc *orbslamService,
+    cameraValidationMaxTimeoutSec int,
+    cameraValidationIntervalSec int,
 ) error {
 	if !orbSvc.useLiveData {
 		return nil
@@ -124,7 +126,7 @@ func runtimeServiceValidation(
 		if time.Since(startTime) >= time.Duration(cameraValidationMaxTimeoutSec)*time.Second {
 			return errors.Wrap(err, "error getting data in desired mode")
 		}
-		if !goutils.SelectContextOrWait(ctx, cameraValidationIntervalSec*time.Second) {
+		if !goutils.SelectContextOrWait(ctx, time.Duration(cameraValidationIntervalSec)*time.Second) {
 			return ctx.Err()
 		}
 	}
@@ -368,7 +370,7 @@ func New(
 		}
 	}()
 
-	if err := runtimeServiceValidation(cancelCtx, cams, orbSvc); err != nil {
+	if err := runtimeServiceValidation(cancelCtx, cams, orbSvc, sensorValidationMaxTimeoutSec, sensorValidationIntervalSec); err != nil {
 		return nil, errors.Wrap(err, "runtime slam service error")
 	}
 
