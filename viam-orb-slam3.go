@@ -265,7 +265,7 @@ func (orbSvc *orbslamService) GetPointCloudMapStream(ctx context.Context, name s
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPointCloudMapStream")
 	defer span.End()
 
-	return grpchelper.GetPointCloudMapStreamCallback(ctx, name, orbSvc.clientAlgo)
+	return grpchelper.GetPointCloudMapCallback(ctx, name, orbSvc.clientAlgo)
 }
 
 // GetInternalStateStream creates a request, calls the slam algorithms GetInternalStateStream endpoint and returns a callback
@@ -274,7 +274,7 @@ func (orbSvc *orbslamService) GetInternalStateStream(ctx context.Context, name s
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetInternalStateStream")
 	defer span.End()
 
-	return grpchelper.GetInternalStateStreamCallback(ctx, name, orbSvc.clientAlgo)
+	return grpchelper.GetInternalStateCallback(ctx, name, orbSvc.clientAlgo)
 }
 
 // GetPointCloudMap creates a request, calls the slam algorithms GetPointCloudMap endpoint and returns a callback
@@ -292,7 +292,7 @@ func (orbSvc *orbslamService) GetInternalState(ctx context.Context, name string)
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetInternalStateStream")
 	defer span.End()
 
-	return grpchelper.GetInternalStateStreamCallback(ctx, name, orbSvc.clientAlgo)
+	return grpchelper.GetInternalStateCallback(ctx, name, orbSvc.clientAlgo)
 }
 
 // New returns a new slam service for the given robot.
