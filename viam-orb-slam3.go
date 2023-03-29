@@ -25,6 +25,7 @@ import (
 	"go.viam.com/rdk/resource"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam"
+	"go.viam.com/rdk/services/slam/grpchelper"
 	"go.viam.com/rdk/spatialmath"
 	rdkutils "go.viam.com/rdk/utils"
 	slamConfig "go.viam.com/slam/config"
@@ -34,8 +35,6 @@ import (
 	goutils "go.viam.com/utils"
 	"go.viam.com/utils/pexec"
 	"golang.org/x/exp/slices"
-
-	"github.com/viamrobotics/viam-orb-slam3/internal/grpchelper"
 )
 
 var (
@@ -247,9 +246,9 @@ func (orbSvc *orbslamService) GetPosition(ctx context.Context, name string) (spa
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPosition")
 	defer span.End()
 
-	req := &pb.GetPositionNewRequest{Name: name}
+	req := &pb.GetPositionRequest{Name: name}
 
-	resp, err := orbSvc.clientAlgo.GetPositionNew(ctx, req)
+	resp, err := orbSvc.clientAlgo.GetPosition(ctx, req)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "error getting SLAM position")
 	}
@@ -272,6 +271,24 @@ func (orbSvc *orbslamService) GetPointCloudMapStream(ctx context.Context, name s
 // GetInternalStateStream creates a request, calls the slam algorithms GetInternalStateStream endpoint and returns a callback
 // function which will return the next chunk of the current internal state of the slam algo.
 func (orbSvc *orbslamService) GetInternalStateStream(ctx context.Context, name string) (func() ([]byte, error), error) {
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetInternalStateStream")
+	defer span.End()
+
+	return grpchelper.GetInternalStateStreamCallback(ctx, name, orbSvc.clientAlgo)
+}
+
+// GetPointCloudMap creates a request, calls the slam algorithms GetPointCloudMap endpoint and returns a callback
+// function which will return the next chunk of the current pointcloud map.
+func (orbSvc *orbslamService) GetPointCloudMap(ctx context.Context, name string) (func() ([]byte, error), error) {
+	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPointCloudMapStream")
+	defer span.End()
+
+	return grpchelper.GetPointCloudMapCallback(ctx, name, orbSvc.clientAlgo)
+}
+
+// GetInternalStateStream creates a request, calls the slam algorithms GetInternalStateStream endpoint and returns a callback
+// function which will return the next chunk of the current internal state of the slam algo.
+func (orbSvc *orbslamService) GetInternalState(ctx context.Context, name string) (func() ([]byte, error), error) {
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetInternalStateStream")
 	defer span.End()
 

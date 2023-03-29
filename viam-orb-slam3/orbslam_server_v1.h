@@ -13,16 +13,16 @@
 
 using grpc::ServerContext;
 using grpc::ServerWriter;
+using viam::service::slam::v1::GetInternalStateRequest;
+using viam::service::slam::v1::GetInternalStateResponse;
 using viam::service::slam::v1::GetInternalStateStreamRequest;
 using viam::service::slam::v1::GetInternalStateStreamResponse;
+using viam::service::slam::v1::GetPointCloudMapRequest;
+using viam::service::slam::v1::GetPointCloudMapResponse;
 using viam::service::slam::v1::GetPointCloudMapStreamRequest;
 using viam::service::slam::v1::GetPointCloudMapStreamResponse;
 using viam::service::slam::v1::GetPositionNewRequest;
 using viam::service::slam::v1::GetPositionNewResponse;
-using viam::service::slam::v1::GetInternalStateRequest;
-using viam::service::slam::v1::GetInternalStateResponse;
-using viam::service::slam::v1::GetPointCloudMapRequest;
-using viam::service::slam::v1::GetPointCloudMapResponse;
 using viam::service::slam::v1::GetPositionRequest;
 using viam::service::slam::v1::GetPositionResponse;
 using viam::service::slam::v1::SLAMService;
@@ -68,8 +68,8 @@ class SLAMServiceImpl final : public SLAMService::Service {
     // the current pose and component_reference of the SLAM
     // sensor.
     ::grpc::Status GetPosition(ServerContext *context,
-                                  const GetPositionRequest *request,
-                                  GetPositionResponse *response) override;
+                               const GetPositionRequest *request,
+                               GetPositionResponse *response) override;
 
     // GetPointCloudMap returns a stream containing a sparse
     // slam map as Binary PCD. In chunks of size maximumGRPCByteChunkSize.
