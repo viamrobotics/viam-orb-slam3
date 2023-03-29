@@ -361,7 +361,7 @@ func New(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	cancelCtx, cancelFunc := context.WithCancel(ctx)
+	cancelCtx, cancelFunc := context.WithCancel(context.Background())
 
 	// SLAM Service Object
 	orbSvc := &orbslamService{
