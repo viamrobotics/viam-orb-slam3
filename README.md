@@ -49,7 +49,7 @@ If desired, Viam's canon tool can be used to create a docker container to build 
 go install github.com/viamrobotics/canon@latest
 ```
 
-And then by running one of the following commands in the viam-orb-slam3 repository based:
+And then by running one of the following commands in the viam-orb-slam3 repository to create the container:
 
 ```bash
 canon -arch arm64
