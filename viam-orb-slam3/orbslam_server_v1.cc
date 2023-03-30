@@ -146,9 +146,9 @@ std::atomic<bool> b_continue_session{true};
     return grpc::Status::OK;
 }
 
-::grpc::Status SLAMServiceImpl::GetPosition(ServerContext *context,
-                                            const GetPositionRequest *request,
-                                            GetPositionResponse *response) {
+::grpc::Status SLAMServiceImpl::GetPosition(
+    ServerContext *context, const GetPositionRequest *request,
+    GetPositionResponse *response) {
     Sophus::SE3f currPose;
     // Copy pose to new location
     {
