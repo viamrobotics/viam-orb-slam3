@@ -15,6 +15,7 @@ script:
  - go install github.com/Otterverse/aix@latest
  - cp `go env GOPATH`/bin/aix $TARGET_APPDIR/usr/bin/
  - cp ../../../bin/orb-slam3-module $TARGET_APPDIR/usr/bin/
+ - echo -e '/usr/bin/orb_grpc_server' > $TARGET_APPDIR/usr/bin/gamma.sh
  - chmod 755 $TARGET_APPDIR/usr/bin/*
 AppDir:
   path: ./AppDir
@@ -60,6 +61,7 @@ AppDir:
     - libgl1:arm64
     - libdlt2:arm64
     - libglvnd0:arm64
+    - bash
   files:
     include: []
     exclude:

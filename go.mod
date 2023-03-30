@@ -8,12 +8,11 @@ require (
 	github.com/edaniels/gostream v0.0.0-20230217173133-d1a1fe96076e
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551
 	github.com/golangci/golangci-lint v1.51.2
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/rhysd/actionlint v1.6.23
 	go.opencensus.io v0.24.0
 	go.viam.com/api v0.1.98
-	go.viam.com/rdk v0.2.32-0.20230329151837-b254f596c678
+	go.viam.com/rdk v0.2.31-0.20230327150047-297e659368f5
 	go.viam.com/slam v0.1.32-0.20230315154454-6c1e77a1e31b
 	go.viam.com/test v1.1.1-0.20220909204145-f61b7c01c33e
 	go.viam.com/utils v0.1.18-0.20230327140716-bfeb34d89117
@@ -185,6 +184,7 @@ require (
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.0 // indirect
 	github.com/moricho/tparallel v0.2.1 // indirect
@@ -312,3 +312,5 @@ require (
 	mvdan.cc/unparam v0.0.0-20221223090309-7455f1af531d // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
+
+replace go.viam.com/rdk => ../rdk
