@@ -17,8 +17,6 @@ using viam::service::slam::v1::GetInternalStateRequest;
 using viam::service::slam::v1::GetInternalStateResponse;
 using viam::service::slam::v1::GetInternalStateStreamRequest;
 using viam::service::slam::v1::GetInternalStateStreamResponse;
-using viam::service::slam::v1::GetMapRequest;
-using viam::service::slam::v1::GetMapResponse;
 using viam::service::slam::v1::GetPointCloudMapRequest;
 using viam::service::slam::v1::GetPointCloudMapResponse;
 using viam::service::slam::v1::GetPointCloudMapStreamRequest;
@@ -42,10 +40,6 @@ static const int maximumGRPCByteChunkSize = 64 * 1024;
 
 class SLAMServiceImpl final : public SLAMService::Service {
    public:
-    ::grpc::Status GetPosition(ServerContext *context,
-                               const GetPositionRequest *request,
-                               GetPositionResponse *response) override;
-
     // For a given GetPositionNewRequest
     // Returns a GetPositionNewResponse containing
     // the current pose and component_reference of the SLAM
@@ -53,25 +47,6 @@ class SLAMServiceImpl final : public SLAMService::Service {
     ::grpc::Status GetPositionNew(ServerContext *context,
                                   const GetPositionNewRequest *request,
                                   GetPositionNewResponse *response) override;
-
-    ::grpc::Status GetMap(ServerContext *context, const GetMapRequest *request,
-                          GetMapResponse *response) override;
-
-    // For a given GetPointCloudMapRequest
-    // Returns a GetPointCloudMapResponse containing a sparse
-    // slam map as Binary PCD. The z-axis represents the direction the camera is
-    // facing at the origin of the map
-    ::grpc::Status GetPointCloudMap(
-        ServerContext *context, const GetPointCloudMapRequest *request,
-        GetPointCloudMapResponse *response) override;
-
-    // For a given GetInternalStateRequest
-    // Returns a GetInternalStateResponse containing
-    // current internal state of the map represented as an ORB-SLAM Atlas(.osa)
-    // file in chunks of size maximumGRPCByteChunkSize
-    ::grpc::Status GetInternalState(
-        ServerContext *context, const GetInternalStateRequest *request,
-        GetInternalStateResponse *response) override;
 
     // GetPointCloudMap returns a stream containing a sparse
     // slam map as Binary PCD. In chunks of size maximumGRPCByteChunkSize.
@@ -88,13 +63,32 @@ class SLAMServiceImpl final : public SLAMService::Service {
         ServerContext *context, const GetInternalStateStreamRequest *request,
         ServerWriter<GetInternalStateStreamResponse> *writer) override;
 
+    // For a given GetPositionRequest
+    // Returns a GetPositionResponse containing
+    // the current pose and component_reference of the SLAM
+    // sensor.
+    ::grpc::Status GetPosition(ServerContext *context,
+                               const GetPositionRequest *request,
+                               GetPositionResponse *response) override;
+
+    // GetPointCloudMap returns a stream containing a sparse
+    // slam map as Binary PCD. In chunks of size maximumGRPCByteChunkSize.
+    // The z-axis represents the direction the camera is
+    // facing at the origin of the map
+    ::grpc::Status GetPointCloudMap(
+        ServerContext *context, const GetPointCloudMapRequest *request,
+        ServerWriter<GetPointCloudMapResponse> *writer) override;
+
+    // GetInternalState returns a stream of the current internal state of
+    // the map represented as an ORB-SLAM Atlas(.osa) file in chunks of size
+    // maximumGRPCByteChunkSize
+    ::grpc::Status GetInternalState(
+        ServerContext *context, const GetInternalStateRequest *request,
+        ServerWriter<GetInternalStateResponse> *writer) override;
+
     void ProcessDataOnline(ORB_SLAM3::System *SLAM);
 
     void ProcessDataOffline(ORB_SLAM3::System *SLAM);
-
-    // Creates a simple map containing a 2x4x8 rectangular prism with the robot
-    // in the center, for testing GetMap and GetPosition.
-    void ProcessDataForTesting(ORB_SLAM3::System *SLAM);
 
     void UpdateMapAndPose(ORB_SLAM3::System *SLAM, Sophus::SE3f tmpPose);
 
