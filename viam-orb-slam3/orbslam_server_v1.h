@@ -36,7 +36,7 @@ extern std::atomic<bool> b_continue_session;
 // Byte limit on unary GRPC calls
 static const int maximumGRPCByteLimit = 32 * 1024 * 1024;
 // Byte limit for chunks on GRPC, used for streaming apis
-static const int maximumGRPCByteChunkSize = 64 * 1024;
+static const int maximumGRPCByteChunkSize = 1 * 1024 * 1024;
 
 class SLAMServiceImpl final : public SLAMService::Service {
    public:
