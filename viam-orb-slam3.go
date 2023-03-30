@@ -41,7 +41,7 @@ var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
 	// Model specifies the unique resource-triple across the rdk.
-	Model             = resource.NewModel("viam", "slam", "orbslamv3")
+	Model             = resource.NewModel("viam", "slam", "orbslam3")
 	supportedSubAlgos = []SubAlgo{Mono, Rgbd}
 )
 
@@ -83,17 +83,14 @@ func init() {
 			return New(ctx, deps, c, logger, false, DefaultExecutableName)
 		},
 	})
-	config.RegisterServiceAttributeMapConverter(slam.Subtype, Model, func(attributes config.AttributeMap) (interface{}, error) {
-		var attrs slamConfig.AttrConfig
-		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{TagName: "json", Result: &attrs})
-		if err != nil {
-			return nil, err
-		}
-		if err := decoder.Decode(attributes); err != nil {
-			return nil, err
-		}
-		return &attrs, nil
-	}, &slamConfig.AttrConfig{})
+	config.RegisterServiceAttributeMapConverter(
+		slam.Subtype,
+		Model,
+		func(attributes config.AttributeMap) (interface{}, error) {
+			var conf slamConfig.AttrConfig
+			return config.TransformAttributeMapToStruct(&conf, attributes)
+		},
+		&slamConfig.AttrConfig{})
 }
 
 // runtimeServiceValidation ensures the service's data processing and saving is valid for the mode and
@@ -334,7 +331,9 @@ func New(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	cancelCtx, cancelFunc := context.WithCancel(ctx)
+
+	// In a module, ctx is short-lived which can cause the data process to exit early
+	cancelCtx, cancelFunc := context.WithCancel(context.Background())
 
 	// SLAM Service Object
 	orbSvc := &orbslamService{
@@ -485,7 +484,7 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	args = append(args, "--aix-auto-update")
 
 	return pexec.ProcessConfig{
-		ID:      "slam_orbslamv3",
+		ID:      "slam_orbslam3",
 		Name:    orbSvc.executableName,
 		Args:    args,
 		Log:     true,
