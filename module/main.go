@@ -27,7 +27,7 @@ func mainWithArgs(ctx context.Context, args []string, logger golog.Logger) error
 		return err
 	}
 
-    // Start the module
+	// Start the module
 	err = orbModule.Start(ctx)
 	defer orbModule.Close(ctx)
 	if err != nil {
