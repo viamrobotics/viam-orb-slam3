@@ -5,11 +5,10 @@ import (
 	"context"
 
 	"github.com/edaniels/golog"
+	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 	"go.viam.com/rdk/module"
 	"go.viam.com/rdk/services/slam"
 	"go.viam.com/utils"
-
-	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 )
 
 func main() {
