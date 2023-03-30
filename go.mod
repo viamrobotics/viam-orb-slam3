@@ -12,8 +12,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rhysd/actionlint v1.6.23
 	go.opencensus.io v0.24.0
-	go.viam.com/api v0.1.96
-	go.viam.com/rdk v0.2.31-0.20230327150047-297e659368f5
+	go.viam.com/api v0.1.98
+	go.viam.com/rdk v0.2.32-0.20230329151837-b254f596c678
 	go.viam.com/slam v0.1.32-0.20230315154454-6c1e77a1e31b
 	go.viam.com/test v1.1.1-0.20220909204145-f61b7c01c33e
 	go.viam.com/utils v0.1.18-0.20230327140716-bfeb34d89117
