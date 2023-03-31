@@ -499,22 +499,24 @@ func (orbSvc *orbslamService) StartDataProcess(
 
 // GetSLAMProcessConfig returns the process config for the SLAM process.
 func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
-	var args []string
+	var orbArgs []string
 
-	args = append(args, "-sensors="+orbSvc.primarySensorName)
-	args = append(args, "-config_param="+slamUtils.DictToString(orbSvc.configParams))
-	args = append(args, "-data_rate_ms="+strconv.Itoa(orbSvc.dataRateMs))
-	args = append(args, "-map_rate_sec="+strconv.Itoa(orbSvc.mapRateSec))
-	args = append(args, "-data_dir="+orbSvc.dataDirectory)
-	args = append(args, "-delete_processed_data="+strconv.FormatBool(orbSvc.deleteProcessedData))
-	args = append(args, "-use_live_data="+strconv.FormatBool(orbSvc.useLiveData))
-	args = append(args, "-port="+orbSvc.port)
-	args = append(args, "--aix-auto-update")
+	orbArgs = append(orbArgs, "-sensors="+orbSvc.primarySensorName)
+	orbArgs = append(orbArgs, "-config_param="+slamUtils.DictToString(orbSvc.configParams))
+	orbArgs = append(orbArgs, "-data_rate_ms="+strconv.Itoa(orbSvc.dataRateMs))
+	orbArgs = append(orbArgs, "-map_rate_sec="+strconv.Itoa(orbSvc.mapRateSec))
+	orbArgs = append(orbArgs, "-data_dir="+orbSvc.dataDirectory)
+	orbArgs = append(orbArgs, "-delete_processed_data="+strconv.FormatBool(orbSvc.deleteProcessedData))
+	orbArgs = append(orbArgs, "-use_live_data="+strconv.FormatBool(orbSvc.useLiveData))
+	orbArgs = append(orbArgs, "-port="+orbSvc.port)
+	orbArgs = append(orbArgs, "--aix-auto-update")
+
+    orbCommand := orbSvc.executableName + " "+strings.Join(orbArgs[:], " ")
 
 	return pexec.ProcessConfig{
-		ID:      "slam_orbslamv3",
-		Name:    orbSvc.executableName,
-		Args:    args,
+		ID:      "slam_orbslam3",
+		Name:    "sh",
+		Args:    []string{"-c", orbCommand},
 		Log:     true,
 		OneShot: false,
 	}
