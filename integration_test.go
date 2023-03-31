@@ -192,7 +192,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	// Release camera image(s) for service validation
 	releaseImages(t, subAlgo)
 	// Create slam service using a real orbslam binary
-	svc, err := testhelper.CreateSLAMService(t, attrCfg, logger, true, true, viamorbslam3.DefaultExecutableName)
+	svc, err := testhelper.CreateSLAMService(t, attrCfg, logger, true, viamorbslam3.DefaultExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
 	// Release camera image(s), since orbslam looks for the second most recent image(s)
@@ -237,7 +237,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	}
 
 	// Don't clear out the directory, since we will re-use the config and data for the next run.
-	testhelper.CloseOutSLAMService(t, "")
+	testhelper.ClearDirectory(t, "")
 
 	// Added sleep to ensure orbslam stops.
 	time.Sleep(time.Millisecond * orbSleepMsec)
@@ -294,7 +294,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	}
 
 	// Create slam service using a real orbslam binary
-	svc, err = testhelper.CreateSLAMService(t, attrCfg, golog.NewTestLogger(t), true, true, viamorbslam3.DefaultExecutableName)
+	svc, err = testhelper.CreateSLAMService(t, attrCfg, golog.NewTestLogger(t), true, viamorbslam3.DefaultExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
 	// Check if orbslam hangs and needs to be shut down
@@ -350,7 +350,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	}
 
 	// Don't clear out the directory, since we will re-use the maps for the next run
-	testhelper.CloseOutSLAMService(t, "")
+	testhelper.ClearDirectory(t, "")
 
 	// Added sleep to ensure orbslam stops
 	time.Sleep(time.Millisecond * orbSleepMsec)
@@ -390,7 +390,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	// Release camera image(s) for service validation
 	releaseImages(t, subAlgo)
 	// Create slam service using a real orbslam binary
-	svc, err = testhelper.CreateSLAMService(t, attrCfg, golog.NewTestLogger(t), true, true, viamorbslam3.DefaultExecutableName)
+	svc, err = testhelper.CreateSLAMService(t, attrCfg, golog.NewTestLogger(t), true, viamorbslam3.DefaultExecutableName)
 	test.That(t, err, test.ShouldBeNil)
 
 	// Make sure we initialize from a saved map
@@ -451,7 +451,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	testOrbslamDir(t, name, expectedMapsApriori, 3)
 
 	// Clear out directory
-	testhelper.CloseOutSLAMService(t, name)
+	testhelper.ClearDirectory(t, name)
 }
 
 // Checks the current slam directory to see if the number of files is around the expected amount

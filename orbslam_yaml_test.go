@@ -119,7 +119,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		grpcServer, port := testhelper.SetupTestGRPCServer(t)
 		attrCfgGood.Port = "localhost:" + strconv.Itoa(port)
 
-		svc, err := testhelper.CreateSLAMService(t, attrCfgGood, logger, false, true, testExecutableName)
+		svc, err := testhelper.CreateSLAMService(t, attrCfgGood, logger, false, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -156,7 +156,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		grpcServer, port := testhelper.SetupTestGRPCServer(t)
 		attrCfgGood.Port = "localhost:" + strconv.Itoa(port)
 
-		svc, err := testhelper.CreateSLAMService(t, attrCfgGood, logger, false, true, testExecutableName)
+		svc, err := testhelper.CreateSLAMService(t, attrCfgGood, logger, false, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -182,7 +182,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		grpcServer, port := testhelper.SetupTestGRPCServer(t)
 		attrCfgGoodHighDataRateMsec.Port = "localhost:" + strconv.Itoa(port)
 
-		svc, err := testhelper.CreateSLAMService(t, attrCfgGoodHighDataRateMsec, logger, false, true, testExecutableName)
+		svc, err := testhelper.CreateSLAMService(t, attrCfgGoodHighDataRateMsec, logger, false, testExecutableName)
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
@@ -208,7 +208,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service with camera that errors from bad intrinsics", func(t *testing.T) {
 		// Create slam service
-		_, err := testhelper.CreateSLAMService(t, attrCfgBadCam, logger, false, false, testExecutableName)
+		_, err := testhelper.CreateSLAMService(t, attrCfgBadCam, logger, false, testExecutableName)
 
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			transform.NewNoIntrinsicsError(fmt.Sprintf("Invalid size (%#v, %#v)", 0, 0)).Error())
@@ -232,7 +232,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 			UseLiveData:   &useLiveData,
 		}
 		// Create slam service
-		_, err := testhelper.CreateSLAMService(t, attrCfgBadParam1, logger, false, false, testExecutableName)
+		_, err := testhelper.CreateSLAMService(t, attrCfgBadParam1, logger, false, testExecutableName)
 		test.That(t, err.Error(), test.ShouldContainSubstring, "Parameter orb_n_features has an invalid definition")
 
 		attrCfgBadParam2 := &slamConfig.AttrConfig{
@@ -250,10 +250,10 @@ func TestOrbslamYAMLNew(t *testing.T) {
 			Port:          "localhost:4445",
 			UseLiveData:   &useLiveData,
 		}
-		_, err = testhelper.CreateSLAMService(t, attrCfgBadParam2, logger, false, false, testExecutableName)
+		_, err = testhelper.CreateSLAMService(t, attrCfgBadParam2, logger, false, testExecutableName)
 
 		test.That(t, err.Error(), test.ShouldContainSubstring, "Parameter orb_scale_factor has an invalid definition")
 	})
 
-	testhelper.CloseOutSLAMService(t, name)
+	testhelper.ClearDirectory(t, name)
 }
