@@ -511,12 +511,12 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	orbArgs = append(orbArgs, "-port="+orbSvc.port)
 	orbArgs = append(orbArgs, "--aix-auto-update")
 
-    orbCommand := orbSvc.executableName + " "+strings.Join(orbArgs[:], " ")
+    // orbCommand := orbSvc.executableName + " "+strings.Join(orbArgs[:], " ")
 
 	return pexec.ProcessConfig{
 		ID:      "slam_orbslam3",
-		Name:    "bash",
-		Args:    []string{"-c", orbCommand},
+		Name:    orbSvc.executableName,
+		Args:    orbArgs,
 		Log:     true,
 		OneShot: false,
 	}
