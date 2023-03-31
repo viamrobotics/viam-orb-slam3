@@ -491,14 +491,15 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	orbArgs = append(orbArgs, "-delete_processed_data="+strconv.FormatBool(orbSvc.deleteProcessedData))
 	orbArgs = append(orbArgs, "-use_live_data="+strconv.FormatBool(orbSvc.useLiveData))
 	orbArgs = append(orbArgs, "-port="+orbSvc.port)
-	orbArgs = append(orbArgs, "--aix-auto-update")
 
-    // orbCommand := orbSvc.executableName + " "+strings.Join(orbArgs[:], " ")
+    orbCommand := orbSvc.executableName + " "+strings.Join(orbArgs[:], " ")
+
+    log.Printf("ZACK -- Orb command: %v\n", orbCommand)
 
 	return pexec.ProcessConfig{
 		ID:      "slam_orbslam3",
-		Name:    orbSvc.executableName,
-		Args:    orbArgs,
+		Name:    "bash",
+		Args:    []string{"-c",orbCommand},
 		Log:     true,
 		OneShot: false,
 	}
