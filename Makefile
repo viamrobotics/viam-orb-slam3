@@ -102,5 +102,3 @@ appimage-module: build
 	mv etc/packaging/appimages/*.AppImage* etc/packaging/appimages/deploy/
 	chmod 755 etc/packaging/appimages/deploy/*.AppImage
 
-
-include *.make

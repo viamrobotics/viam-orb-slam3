@@ -515,7 +515,7 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 
 	return pexec.ProcessConfig{
 		ID:      "slam_orbslam3",
-		Name:    "sh",
+		Name:    "bash",
 		Args:    []string{"-c", orbCommand},
 		Log:     true,
 		OneShot: false,

@@ -36,7 +36,7 @@ AppDir:
     - sourceline: deb [trusted=yes] http://deb.debian.org/debian bullseye-updates main
     - sourceline: deb [trusted=yes] https://us-apt.pkg.dev/projects/static-file-server-310021 bullseye main
     include:
-    - sh
+    - bash
     - libboost-serialization1.74.0:arm64
     - libboost-filesystem1.74.0:arm64
     - libboost-log1.74.0:arm64
