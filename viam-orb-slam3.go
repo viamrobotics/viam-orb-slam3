@@ -53,7 +53,7 @@ const (
 	opTimeoutErrorMessage = "bad scan: OpTimeout"
 	localhost0            = "localhost:0"
 	// DefaultExecutableName is what this program expects to call to start the grpc server.
-	DefaultExecutableName = "/usr/bin/orb_grpc_server"
+	DefaultExecutableName = "orb_grpc_server"
 )
 
 // SubAlgo defines the ORB_SLAM3 specific algorithms that we support.
@@ -487,7 +487,9 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	appDir := os.Getenv("APPDIR")
 
 	if appDir != "" {
-		target = appDir + "/" + strings.TrimPrefix(target, "/")
+        // The orb grpc server is expected to be in 
+        // /usr/bin/ if we are running in an appimage.
+		target = appDir + "/usr/bin/" + strings.TrimPrefix(target, "/")
 	}
 
 	return pexec.ProcessConfig{
