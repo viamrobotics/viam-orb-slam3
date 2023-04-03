@@ -1,0 +1,5 @@
+* Ask Kat about why we refactored setupTestGRPC
+* Copy populate the sensors in /internal/sensors/... in a way similar to what was done in cartographer
+    - It might make sense to define a kind of "Algorithm" interface and then have all of the different algorithms (like mono, rgbd, etc) implement that. That might make things more algorithm agnostic. However, that also might make it harder to add more creative / specialized algorithms in the future. I unfortunately haven't had the time to experiment with this much to figure out the right way to approach this. 
+* Add tests to the sensors
+

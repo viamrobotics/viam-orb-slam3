@@ -1,5 +1,6 @@
 // Package testhelper implements a slam service definition with additional exported functions for
-// the purpose of testing
+// the purpose of testing. It does also contain helper variables and functions that are
+// used across all tests in the viam-orb-slam3 repo.
 package testhelper
 
 import (
@@ -38,16 +39,28 @@ import (
 )
 
 var (
-	IntCameraMutex             sync.Mutex
+	// IntCameraMutex is used to sync cameras for integration tests
+	IntCameraMutex sync.Mutex
+	// IntCameraReleaseImagesChan is used to simulate real camera releasing for integration tests
 	IntCameraReleaseImagesChan = make(chan int, 2)
-	IntWebcamReleaseImageChan  = make(chan int, 1)
-	IntSynchronizeCamerasChan  = make(chan int)
+
+	// IntWebcamReleaseImageChan is used to simulate real camera releasing for integration tests
+	IntWebcamReleaseImageChan = make(chan int, 1)
+
+	// IntSynchronizeCamerasChan is used to sync cameras for integration tests
+	IntSynchronizeCamerasChan = make(chan int)
 )
 
 const (
-    SensorValidationMaxTimeoutSecForTest = 1
-    SensorValidationIntervalSecForTest = 1
-    DialMaxTimeoutSecForTest = 2
+	// SensorValidationMaxTimeoutSecForTest is used in the ValidateGetAndSaveData
+	// function to ensure that the sensor in the GetAndSaveData function
+	// returns data within an acceptable time.
+	SensorValidationMaxTimeoutSecForTest = 1
+	SensorValidationIntervalSecForTest   = 1
+	// SensorValidationIntervalSecForTest is used in the ValidateGetAndSaveData
+	// function for the while loop that attempts to grab data from the
+	// sensor that is used in the GetAndSaveData function.
+	dialMaxTimeoutSecForTest = 2
 )
 
 func SetupDeps(attr *slamConfig.AttrConfig) registry.Dependencies {
@@ -415,23 +428,22 @@ func CreateSLAMService(
 	}
 	test.That(t, sensorDeps, test.ShouldResemble, attrCfg.Sensors)
 
-
 	svc, err := viamorbslam3.New(
-        ctx,
-        deps,
-        cfgService,
-        logger,
-        bufferSLAMProcessLogs,
-        executableName,
-        SensorValidationMaxTimeoutSecForTest,
-        SensorValidationIntervalSecForTest,
-        DialMaxTimeoutSecForTest,
-    )
+		ctx,
+		deps,
+		cfgService,
+		logger,
+		bufferSLAMProcessLogs,
+		executableName,
+		SensorValidationMaxTimeoutSecForTest,
+		SensorValidationIntervalSecForTest,
+		dialMaxTimeoutSecForTest,
+	)
 
-    if err != nil {
-        test.That(t, svc, test.ShouldNotBeNil)
-        return nil, err
-    }
+	if err != nil {
+		test.That(t, svc, test.ShouldBeNil)
+		return nil, err
+	}
 
 	test.That(t, svc, test.ShouldNotBeNil)
 	return svc, err

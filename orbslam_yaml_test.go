@@ -62,7 +62,7 @@ func findLastYAML(folderName string) (string, string, error) {
 
 func TestOrbslamYAMLNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	dataDir, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	useLiveData := true
@@ -77,7 +77,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 			"orb_n_ini_th_fast": "20",
 			"orb_n_min_th_fast": "7",
 		},
-		DataDirectory: name,
+		DataDirectory: dataDir,
 		DataRateMsec:  dataRateMs,
 		Port:          "localhost:4445",
 		UseLiveData:   &useLiveData,
@@ -92,7 +92,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 			"orb_n_ini_th_fast": "20",
 			"orb_n_min_th_fast": "7",
 		},
-		DataDirectory: name,
+		DataDirectory: dataDir,
 		DataRateMsec:  10000,
 		Port:          "localhost:4445",
 		UseLiveData:   &useLiveData,
@@ -107,7 +107,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 			"orb_n_ini_th_fast": "20",
 			"orb_n_min_th_fast": "7",
 		},
-		DataDirectory: name,
+		DataDirectory: dataDir,
 		DataRateMsec:  dataRateMs,
 		Port:          "localhost:4445",
 		UseLiveData:   &useLiveData,
@@ -125,7 +125,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		grpcServer.Stop()
 		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 
-		yamlFileTimeStampGood, yamlFilePathGood, err := findLastYAML(name)
+		yamlFileTimeStampGood, yamlFilePathGood, err := findLastYAML(dataDir)
 
 		fakeMapTimestamp = yamlFileTimeStampGood
 		test.That(t, err, test.ShouldBeNil)
@@ -144,7 +144,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		test.That(t, orbslam.LoadMapLoc, test.ShouldEqual, "")
 		test.That(t, orbslam.FPSCamera, test.ShouldEqual, 5)
 
-		fakeMap = filepath.Join(name, "map", attrCfgGood.Sensors[0]+"_data_"+yamlFileTimeStampGood)
+		fakeMap = filepath.Join(dataDir, "map", attrCfgGood.Sensors[0]+"_data_"+yamlFileTimeStampGood)
 		outfile, err := os.Create(fakeMap + ".osa")
 		test.That(t, err, test.ShouldBeNil)
 		err = outfile.Close()
@@ -163,7 +163,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 
 		// Should have the same name due to map being found
-		yamlFileTimeStampGood, yamlFilePathGood, err := findLastYAML(name)
+		yamlFileTimeStampGood, yamlFilePathGood, err := findLastYAML(dataDir)
 		test.That(t, err, test.ShouldBeNil)
 		test.That(t, yamlFileTimeStampGood, test.ShouldEqual, fakeMapTimestamp)
 
@@ -188,7 +188,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		grpcServer.Stop()
 		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 
-		yamlFileTimeStampGood, yamlFilePathGood, err := findLastYAML(name)
+		yamlFileTimeStampGood, yamlFilePathGood, err := findLastYAML(dataDir)
 
 		fakeMapTimestamp = yamlFileTimeStampGood
 		test.That(t, err, test.ShouldBeNil)
@@ -226,7 +226,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 				"orb_n_ini_th_fast": "20",
 				"orb_n_min_th_fast": "7",
 			},
-			DataDirectory: name,
+			DataDirectory: dataDir,
 			DataRateMsec:  dataRateMs,
 			Port:          "localhost:4445",
 			UseLiveData:   &useLiveData,
@@ -245,7 +245,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 				"orb_n_ini_th_fast": "20",
 				"orb_n_min_th_fast": "7",
 			},
-			DataDirectory: name,
+			DataDirectory: dataDir,
 			DataRateMsec:  dataRateMs,
 			Port:          "localhost:4445",
 			UseLiveData:   &useLiveData,
@@ -255,5 +255,5 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		test.That(t, err.Error(), test.ShouldContainSubstring, "Parameter orb_scale_factor has an invalid definition")
 	})
 
-	testhelper.ClearDirectory(t, name)
+	testhelper.ClearDirectory(t, dataDir)
 }

@@ -29,29 +29,29 @@ import (
 )
 
 const (
-	validDataRateMS    = 200
+	testDataRateMsec   = 200
 	dataBufferSize     = 4
 	testExecutableName = "true" // the program "true", not the boolean value
 )
 
 var (
-	validMapRate                      = 200
-	_true                             = true
-	_false                            = false
+	testMapRateSec = 200
+	_true          = true
+	_false         = false
 )
 
-func TestGeneralNew(t *testing.T) {
+func TestNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	dataDir, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
-	t.Run("New slam service with no camera", func(t *testing.T) {
+	t.Run("Successful creation of slam service with no camera", func(t *testing.T) {
 		grpcServer, port := testhelper.SetupTestGRPCServer(t)
 		test.That(t, err, test.ShouldBeNil)
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{},
 			ConfigParams:  map[string]string{"mode": "mono"},
-			DataDirectory: name,
+			DataDirectory: dataDir,
 			Port:          "localhost:" + strconv.Itoa(port),
 			UseLiveData:   &_false,
 		}
@@ -66,12 +66,12 @@ func TestGeneralNew(t *testing.T) {
 		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 	})
 
-	t.Run("New slam service with bad camera", func(t *testing.T) {
+	t.Run("Failed creation of slam service with bad camera", func(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"gibberish"},
 			ConfigParams:  map[string]string{"mode": "mono"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			UseLiveData:   &_true,
 		}
 
@@ -82,21 +82,13 @@ func TestGeneralNew(t *testing.T) {
 				"\"gibberish\" missing from dependencies"))
 	})
 
-	testhelper.ClearDirectory(t, name)
-}
-
-func TestORBSLAMNew(t *testing.T) {
-	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
-	test.That(t, err, test.ShouldBeNil)
-
-	t.Run("New orbslamv3 service with good camera in slam mode rgbd", func(t *testing.T) {
+	t.Run("Successful creation of slam service with good camera in slam mode rgbd", func(t *testing.T) {
 		grpcServer, port := testhelper.SetupTestGRPCServer(t)
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"good_color_camera", "good_depth_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			Port:          "localhost:" + strconv.Itoa(port),
 			UseLiveData:   &_true,
 		}
@@ -109,12 +101,12 @@ func TestORBSLAMNew(t *testing.T) {
 		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 	})
 
-	t.Run("New orbslamv3 service in slam mode rgbd that errors due to a single camera", func(t *testing.T) {
+	t.Run("Failed creation of service in slam mode rgbd that errors due to a single camera", func(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"good_color_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			UseLiveData:   &_true,
 		}
 
@@ -129,8 +121,8 @@ func TestORBSLAMNew(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"missing_distortion_parameters_camera"},
 			ConfigParams:  map[string]string{"mode": "mono"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			Port:          "localhost:" + strconv.Itoa(port),
 			UseLiveData:   &_true,
 		}
@@ -150,8 +142,8 @@ func TestORBSLAMNew(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"missing_camera_properties"},
 			ConfigParams:  map[string]string{"mode": "mono"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			Port:          "localhost:" + strconv.Itoa(port),
 			UseLiveData:   &_true,
 		}
@@ -171,8 +163,8 @@ func TestORBSLAMNew(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"good_depth_camera", "good_color_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			UseLiveData:   &_true,
 		}
 
@@ -187,8 +179,8 @@ func TestORBSLAMNew(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"good_color_camera"},
 			ConfigParams:  map[string]string{"mode": "mono"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			Port:          "localhost:" + strconv.Itoa(port),
 			UseLiveData:   &_true,
 		}
@@ -205,8 +197,8 @@ func TestORBSLAMNew(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"bad_camera_no_stream"},
 			ConfigParams:  map[string]string{"mode": "mono"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			UseLiveData:   &_true,
 		}
 
@@ -220,8 +212,8 @@ func TestORBSLAMNew(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"bad_camera_intrinsics"},
 			ConfigParams:  map[string]string{"mode": "mono"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			UseLiveData:   &_true,
 		}
 
@@ -235,8 +227,8 @@ func TestORBSLAMNew(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"invalid_sensor_type"},
 			ConfigParams:  map[string]string{"mode": "mono"},
-			DataDirectory: name,
-			DataRateMsec:  validDataRateMS,
+			DataDirectory: dataDir,
+			DataRateMsec:  testDataRateMsec,
 			UseLiveData:   &_true,
 		}
 
@@ -245,20 +237,20 @@ func TestORBSLAMNew(t *testing.T) {
 		test.That(t, err.Error(), test.ShouldContainSubstring,
 			"configuring camera error:")
 	})
-	testhelper.ClearDirectory(t, name)
+	testhelper.ClearDirectory(t, dataDir)
 }
 
 func TestORBSLAMDataProcess(t *testing.T) {
 	logger, obs := golog.NewObservedTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	dataDir, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	grpcServer, port := testhelper.SetupTestGRPCServer(t)
 	attrCfg := &slamConfig.AttrConfig{
 		Sensors:       []string{"good_color_camera"},
 		ConfigParams:  map[string]string{"mode": "mono"},
-		DataDirectory: name,
-		DataRateMsec:  validDataRateMS,
+		DataDirectory: dataDir,
+		DataRateMsec:  testDataRateMsec,
 		Port:          "localhost:" + strconv.Itoa(port),
 		UseLiveData:   &_true,
 	}
@@ -296,7 +288,7 @@ func TestORBSLAMDataProcess(t *testing.T) {
 
 		<-c
 		cancelFunc()
-		files, err := os.ReadDir(name + "/data/rgb/")
+		files, err := os.ReadDir(dataDir + "/data/rgb/")
 		test.That(t, len(files), test.ShouldBeGreaterThanOrEqualTo, 1)
 		test.That(t, err, test.ShouldBeNil)
 	})
@@ -321,21 +313,21 @@ func TestORBSLAMDataProcess(t *testing.T) {
 
 	test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 
-	testhelper.ClearDirectory(t, name)
+	testhelper.ClearDirectory(t, dataDir)
 }
 
 func TestEndpointFailures(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	dataDir, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	grpcServer, port := testhelper.SetupTestGRPCServer(t)
 	attrCfg := &slamConfig.AttrConfig{
 		Sensors:       []string{"good_color_camera"},
 		ConfigParams:  map[string]string{"mode": "mono", "test_param": "viam"},
-		DataDirectory: name,
-		MapRateSec:    &validMapRate,
-		DataRateMsec:  validDataRateMS,
+		DataDirectory: dataDir,
+		MapRateSec:    &testMapRateSec,
+		DataRateMsec:  testDataRateMsec,
 		Port:          "localhost:" + strconv.Itoa(port),
 		UseLiveData:   &_true,
 	}
@@ -366,12 +358,12 @@ func TestEndpointFailures(t *testing.T) {
 	grpcServer.Stop()
 	test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 
-	testhelper.ClearDirectory(t, name)
+	testhelper.ClearDirectory(t, dataDir)
 }
 
-func TestSLAMProcessSuccess(t *testing.T) {
+func TestSLAMProcess(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	dataDir, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	t.Run("Test online SLAM process with default parameters", func(t *testing.T) {
@@ -379,7 +371,7 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{"good_color_camera", "good_depth_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd", "test_param": "viam"},
-			DataDirectory: name,
+			DataDirectory: dataDir,
 			Port:          "localhost:" + strconv.Itoa(port),
 			UseLiveData:   &_true,
 		}
@@ -398,7 +390,7 @@ func TestSLAMProcessSuccess(t *testing.T) {
 			{"-config_param={test_param=viam,mode=rgbd}", "-config_param={mode=rgbd,test_param=viam}"},
 			{"-data_rate_ms=200"},
 			{"-map_rate_sec=60"},
-			{"-data_dir=" + name},
+			{"-data_dir=" + dataDir},
 			{"-delete_processed_data=true"},
 			{"-use_live_data=true"},
 			{"-port=localhost:" + strconv.Itoa(port)},
@@ -415,12 +407,12 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 	})
 
-	t.Run("Test offline SLAM process with default parameters", func(t *testing.T) {
+	t.Run("Successful start of offline SLAM process with default parameters", func(t *testing.T) {
 		grpcServer, port := testhelper.SetupTestGRPCServer(t)
 		attrCfg := &slamConfig.AttrConfig{
 			Sensors:       []string{},
 			ConfigParams:  map[string]string{"mode": "mono", "test_param": "viam"},
-			DataDirectory: name,
+			DataDirectory: dataDir,
 			Port:          "localhost:" + strconv.Itoa(port),
 			UseLiveData:   &_false,
 		}
@@ -439,7 +431,7 @@ func TestSLAMProcessSuccess(t *testing.T) {
 			{"-config_param={mode=mono,test_param=viam}", "-config_param={test_param=viam,mode=mono}"},
 			{"-data_rate_ms=200"},
 			{"-map_rate_sec=60"},
-			{"-data_dir=" + name},
+			{"-data_dir=" + dataDir},
 			{"-delete_processed_data=false"},
 			{"-use_live_data=false"},
 			{"-port=localhost:" + strconv.Itoa(port)},
@@ -456,33 +448,25 @@ func TestSLAMProcessSuccess(t *testing.T) {
 		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
 	})
 
-	testhelper.ClearDirectory(t, name)
-}
+	t.Run("Failed start of SLAM process that errors out due to invalid executable name", func(t *testing.T) {
 
-func TestSLAMProcessFail(t *testing.T) {
-	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
-	test.That(t, err, test.ShouldBeNil)
-
-	grpcServer, port := testhelper.SetupTestGRPCServer(t)
-	attrCfg := &slamConfig.AttrConfig{
-		Sensors:       []string{"good_color_camera"},
-		ConfigParams:  map[string]string{"mode": "mono", "test_param": "viam"},
-		DataDirectory: name,
-		MapRateSec:    &validMapRate,
-		DataRateMsec:  validDataRateMS,
-		Port:          "localhost:" + strconv.Itoa(port),
-		UseLiveData:   &_true,
-	}
-
-	t.Run("Run SLAM process that errors out due to invalid executable name", func(t *testing.T) {
+		grpcServer, port := testhelper.SetupTestGRPCServer(t)
+		attrCfg := &slamConfig.AttrConfig{
+			Sensors:       []string{"good_color_camera"},
+			ConfigParams:  map[string]string{"mode": "mono", "test_param": "viam"},
+			DataDirectory: dataDir,
+			MapRateSec:    &testMapRateSec,
+			DataRateMsec:  testDataRateMsec,
+			Port:          "localhost:" + strconv.Itoa(port),
+			UseLiveData:   &_true,
+		}
 		// This test ensures that we get the correct error if the user does
 		// not have the correct binary installed.
 		_, err := testhelper.CreateSLAMService(t, attrCfg, logger, false, "fail_this_binary_does_not_exist")
 		test.That(t, fmt.Sprint(err), test.ShouldContainSubstring, "executable file not found in $PATH")
+
+		grpcServer.Stop()
 	})
 
-	grpcServer.Stop()
-
-	testhelper.ClearDirectory(t, name)
+	testhelper.ClearDirectory(t, dataDir)
 }
