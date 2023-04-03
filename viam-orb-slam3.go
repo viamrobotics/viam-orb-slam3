@@ -487,8 +487,8 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	appDir := os.Getenv("APPDIR")
 
 	if appDir != "" {
-        // The orb grpc server is expected to be in 
-        // /usr/bin/ if we are running in an appimage.
+		// The orb grpc server is expected to be in
+		// /usr/bin/ if we are running in an appimage.
 		target = appDir + "/usr/bin/" + strings.TrimPrefix(target, "/")
 	}
 
