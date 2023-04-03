@@ -41,9 +41,9 @@ const auto HEADERTEMPLATE =
 
 std::atomic<bool> b_continue_session{true};
 
-::grpc::Status SLAMServiceImpl::GetPositionNew(
-    ServerContext *context, const GetPositionNewRequest *request,
-    GetPositionNewResponse *response) {
+::grpc::Status SLAMServiceImpl::GetPosition(ServerContext *context,
+                                            const GetPositionRequest *request,
+                                            GetPositionResponse *response) {
     Sophus::SE3f currPose;
     // Copy pose to new location
     {
@@ -82,9 +82,9 @@ std::atomic<bool> b_continue_session{true};
     return grpc::Status::OK;
 }
 
-::grpc::Status SLAMServiceImpl::GetPointCloudMapStream(
-    ServerContext *context, const GetPointCloudMapStreamRequest *request,
-    ServerWriter<GetPointCloudMapStreamResponse> *writer) {
+::grpc::Status SLAMServiceImpl::GetPointCloudMap(
+    ServerContext *context, const GetPointCloudMapRequest *request,
+    ServerWriter<GetPointCloudMapResponse> *writer) {
     std::vector<ORB_SLAM3::MapPoint *> actualMap;
     {
         std::lock_guard<std::mutex> lk(slam_mutex);
@@ -106,7 +106,7 @@ std::atomic<bool> b_continue_session{true};
     }
 
     std::string pcd_chunk;
-    GetPointCloudMapStreamResponse response;
+    GetPointCloudMapResponse response;
     for (int start_index = 0; start_index < buffer.size();
          start_index += maximumGRPCByteChunkSize) {
         pcd_chunk = buffer.substr(start_index, maximumGRPCByteChunkSize);
@@ -119,9 +119,9 @@ std::atomic<bool> b_continue_session{true};
     return grpc::Status::OK;
 }
 
-::grpc::Status SLAMServiceImpl::GetInternalStateStream(
-    ServerContext *context, const GetInternalStateStreamRequest *request,
-    ServerWriter<GetInternalStateStreamResponse> *writer) {
+::grpc::Status SLAMServiceImpl::GetInternalState(
+    ServerContext *context, const GetInternalStateRequest *request,
+    ServerWriter<GetInternalStateResponse> *writer) {
     std::stringbuf buffer;
     // deferring reading the osa file in chunks until we run into issues
     // with loading the file into memory
@@ -131,7 +131,7 @@ std::atomic<bool> b_continue_session{true};
                             "SLAM is not yet initialized");
 
     std::string internal_state_chunk;
-    GetInternalStateStreamResponse response;
+    GetInternalStateResponse response;
     std::string buffer_str = buffer.str();
     for (int start_index = 0; start_index < buffer_str.size();
          start_index += maximumGRPCByteChunkSize) {
