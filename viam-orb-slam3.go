@@ -53,7 +53,7 @@ const (
 	opTimeoutErrorMessage = "bad scan: OpTimeout"
 	localhost0            = "localhost:0"
 	// DefaultExecutableName is what this program expects to call to start the grpc server.
-	DefaultExecutableName = "orb_grpc_server"
+	DefaultExecutableName = "/usr/bin/orb_grpc_server"
 )
 
 // SubAlgo defines the ORB_SLAM3 specific algorithms that we support.
@@ -487,11 +487,23 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	args = append(args, "-port="+orbSvc.port)
 	args = append(args, "--aix-auto-update")
 
+	target := orbSvc.executableName
+
+	appDir := os.Getenv("APPDIR")
+
+	if appDir != "" {
+		target = appDir + "/" + strings.TrimPrefix(target, "/")
+	}
+
 	return pexec.ProcessConfig{
-		ID:      "slam_orbslamv3",
-		Name:    orbSvc.executableName,
-		Args:    args,
-		Log:     true,
+		ID:   "slam_orbslamv3",
+		Name: target,
+		Args: args,
+		Log:  true,
+		// In appimage this is set to the appimage
+		// squashfs mount location (/tmp/.mountXXXXX)
+		// Otherwise, it is an empty string
+		CWD:     os.Getenv("APPRUN_RUNTIME"),
 		OneShot: false,
 	}
 }
