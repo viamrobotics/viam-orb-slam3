@@ -35,7 +35,7 @@ AppDir:
     - sourceline: deb [trusted=yes] http://deb.debian.org/debian bullseye-updates main
     - sourceline: deb [trusted=yes] https://us-apt.pkg.dev/projects/static-file-server-310021 bullseye main
     include:
-    - bash
+    - bash:arm64
     - libboost-serialization1.74.0:arm64
     - libboost-filesystem1.74.0:arm64
     - libboost-log1.74.0:arm64
@@ -43,22 +43,15 @@ AppDir:
     - libpangolin0:arm64
     - libglew2.1:arm64
     - libopengl0:arm64
-    - libgrpc++1:arm64
-    - libprotobuf31:arm64
     - libopencv-imgcodecs4.5:arm64
     - libopencv-highgui4.5:arm64
     - libopencv-calib3d4.5:arm64
-    - libopencv-features2d4.5:arm64
-    - libopencv-imgproc4.5:arm64
-    - libopencv-core4.5:arm64
     - libegl1:arm64
     - libwayland-egl1:arm64
     - libwayland-cursor0:arm64
     - libwayland-client0:arm64
     - libxcb-render0:arm64
     - libxcb-shm0:arm64
-    - libglx0:arm64
-    - libgl1:arm64
     - libdlt2:arm64
     - libglvnd0:arm64
   files:
@@ -77,13 +70,6 @@ AppDir:
     - usr/lib/libpango_scene.so
     - usr/lib/libpango_tools.so
     - usr/lib/libpango_video.so
-    - usr/lib/aarch64-linux-gnu/libzvbi.so.0
-    - usr/lib/aarch64-linux-gnu/libzmq.so.5
-    - usr/lib/aarch64-linux-gnu/libasound.so.2
-    - usr/lib/aarch64-linux-gnu/libvpx.so.6.3
-    - usr/lib/aarch64-linux-gnu/libunistring.so.2
-    - usr/lib/aarch64-linux-gnu/libubsan.so.1
-    
   runtime:
     env:
         AIX_TARGET: usr/bin/orb-slam3-module

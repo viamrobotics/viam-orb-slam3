@@ -492,14 +492,23 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	orbArgs = append(orbArgs, "-use_live_data="+strconv.FormatBool(orbSvc.useLiveData))
 	orbArgs = append(orbArgs, "-port="+orbSvc.port)
 
-    orbCommand := orbSvc.executableName + " "+strings.Join(orbArgs[:], " ")
+	orbCommand := orbSvc.executableName + " " + strings.Join(orbArgs[:], " ")
 
-    log.Printf("ZACK -- Orb command: %v\n", orbCommand)
+	appDir := os.Getenv("APPDIR")
+
+	target := "/bin/bash"
+
+	if appDir != "" {
+		target = appDir + "/" + strings.TrimPrefix(target, "/")
+	}
+
+	log.Printf("ZACK -- Orb command: %v\n", orbCommand)
 
 	return pexec.ProcessConfig{
 		ID:      "slam_orbslam3",
-		Name:    "bash",
-		Args:    []string{"-c",orbCommand},
+		Name:    target,
+		Args:    []string{"-c", orbCommand},
+		CWD:     os.Getenv("APPRUN_RUNTIME"),
 		Log:     true,
 		OneShot: false,
 	}
