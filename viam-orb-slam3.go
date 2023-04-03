@@ -40,7 +40,7 @@ var (
 	cameraValidationMaxTimeoutSec = 30 // reconfigurable for testing
 	dialMaxTimeoutSec             = 30 // reconfigurable for testing
 	// Model specifies the unique resource-triple across the rdk.
-	Model             = resource.NewModel("viam", "slam", "orbslam3")
+	Model             = resource.NewModel("viam", "slam", "orbslamv3")
 	supportedSubAlgos = []SubAlgo{Mono, Rgbd}
 )
 
@@ -480,7 +480,7 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	args = append(args, "--aix-auto-update")
 
 	return pexec.ProcessConfig{
-		ID:      "slam_orbslam3",
+		ID:      "slam_orbslamv3",
 		Name:    orbSvc.executableName,
 		Args:    args,
 		Log:     true,
