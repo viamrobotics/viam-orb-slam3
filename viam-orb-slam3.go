@@ -77,11 +77,15 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 }
 
 func init() {
-	registry.RegisterService(slam.Subtype, Model, registry.Service{
-		Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
-			return New(ctx, deps, c, logger, false, DefaultExecutableName)
-		},
-	})
+	registry.RegisterService(
+		slam.Subtype,
+		Model,
+		registry.Service{
+			Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
+				return New(ctx, deps, c, logger, false, DefaultExecutableName)
+			},
+		})
+
 	config.RegisterServiceAttributeMapConverter(
 		slam.Subtype,
 		Model,
@@ -330,7 +334,8 @@ func New(ctx context.Context,
 	}
 
 	// In a module, ctx is short-lived which can cause the data process to exit early
-	cancelCtx, cancelFunc := context.WithCancel(context.Background())
+	// To be re-evaluated in https://viam.atlassian.net/browse/RSDK-2586
+	cancelCtx, cancelFunc := context.WithCancel(context.TODO())
 
 	// SLAM Service Object
 	orbSvc := &orbslamService{

@@ -1,36 +1,36 @@
 {
-    "modules": [
-        "name": "orb_slam3_module",
-        "executable_path": "/usr/local/bin/orb-slam3-module"
-    ],
-    "components": [
-        {
-          "name": "color_webcam",
-          "type": "camera",
-          "model": "webcam",
-          "attributes": {
-            "SEE": "https://docs.viam.com/components/camera/calibrate/"
-          },
-          "depends_on": []
-        }
-    ],
-    "services": [
-        {
-          "model": "viam:slam:orbslam3",
-          "type": "slam",
-          "name": "Orb slam3",
-          "attributes": {
-            "data_rate_msec": 200,
-            "config_params": {
-              "mode": "mono"
-            },
-            "data_dir": "/home/USERNAME/DATA_DIR",
-            "sensors": [
-              "color_webcam"
-            ],
-            "use_live_data": true,
-            "map_rate_sec": 60
-          }
-        }
-    ]
+  "modules": {
+    "name": "orb_slam3_module",
+    "executable_path": "/usr/local/bin/orb-slam3-module"
+  },
+  "components": [
+    {
+      "name": "color_webcam",
+      "type": "camera",
+      "model": "webcam",
+      "attributes": {
+        "SEE": "https://docs.viam.com/components/camera/calibrate/"
+      },
+      "depends_on": []
+    }
+  ],
+  "services": [
+    {
+      "model": "viam:slam:orbslam3",
+      "type": "slam",
+      "name": "Orb slam3",
+      "attributes": {
+        "data_rate_msec": 200,
+        "config_params": {
+          "mode": "mono"
+        },
+        "data_dir": "/home/USERNAME/DATA_DIR",
+        "sensors": [
+          "color_webcam"
+        ],
+        "use_live_data": true,
+        "map_rate_sec": 60
+      }
+    }
+  ]
 }
