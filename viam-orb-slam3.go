@@ -162,8 +162,6 @@ type orbslamService struct {
 	dataRateMs int
 	mapRateSec int
 
-	dev bool
-
 	cancelFunc              func()
 	logger                  golog.Logger
 	activeBackgroundWorkers sync.WaitGroup
@@ -352,7 +350,6 @@ func New(ctx context.Context,
 		cancelFunc:            cancelFunc,
 		logger:                logger,
 		bufferSLAMProcessLogs: bufferSLAMProcessLogs,
-		dev:                   svcConfig.Dev,
 	}
 
 	var success bool
