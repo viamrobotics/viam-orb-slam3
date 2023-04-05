@@ -146,6 +146,7 @@ func runtimeServiceValidation(
 // orbslamService is the structure of the ORB_SLAM3 slam service.
 type orbslamService struct {
 	generic.Unimplemented
+	name              string
 	primarySensorName string
 	subAlgo           SubAlgo
 	executableName    string // by default: DefaultExecutableName
@@ -240,11 +241,11 @@ func configureCameras(ctx context.Context,
 
 // GetPosition forwards the request for positional data to the slam library's gRPC service. Once a response is received,
 // it is unpacked into a Pose and a component reference string.
-func (orbSvc *orbslamService) GetPosition(ctx context.Context, name string) (spatialmath.Pose, string, error) {
+func (orbSvc *orbslamService) GetPosition(ctx context.Context) (spatialmath.Pose, string, error) {
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPosition")
 	defer span.End()
 
-	req := &pb.GetPositionRequest{Name: name}
+	req := &pb.GetPositionRequest{Name: orbSvc.name}
 
 	resp, err := orbSvc.clientAlgo.GetPosition(ctx, req)
 	if err != nil {
@@ -259,20 +260,20 @@ func (orbSvc *orbslamService) GetPosition(ctx context.Context, name string) (spa
 
 // GetPointCloudMap creates a request, calls the slam algorithms GetPointCloudMap endpoint and returns a callback
 // function which will return the next chunk of the current pointcloud map.
-func (orbSvc *orbslamService) GetPointCloudMap(ctx context.Context, name string) (func() ([]byte, error), error) {
+func (orbSvc *orbslamService) GetPointCloudMap(ctx context.Context) (func() ([]byte, error), error) {
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPointCloudMap")
 	defer span.End()
 
-	return grpchelper.GetPointCloudMapCallback(ctx, name, orbSvc.clientAlgo)
+	return grpchelper.GetPointCloudMapCallback(ctx, orbSvc.name, orbSvc.clientAlgo)
 }
 
 // GetInternalState creates a request, calls the slam algorithms GetInternalState endpoint and returns a callback
 // function which will return the next chunk of the current internal state of the slam algo.
-func (orbSvc *orbslamService) GetInternalState(ctx context.Context, name string) (func() ([]byte, error), error) {
+func (orbSvc *orbslamService) GetInternalState(ctx context.Context) (func() ([]byte, error), error) {
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetInternalState")
 	defer span.End()
 
-	return grpchelper.GetInternalStateCallback(ctx, name, orbSvc.clientAlgo)
+	return grpchelper.GetInternalStateCallback(ctx, orbSvc.name, orbSvc.clientAlgo)
 }
 
 // New returns a new slam service for the given robot.
@@ -336,6 +337,7 @@ func New(ctx context.Context,
 
 	// SLAM Service Object
 	orbSvc := &orbslamService{
+		name:                  config.Name,
 		primarySensorName:     primarySensorName,
 		subAlgo:               subAlgo,
 		executableName:        executableName,
