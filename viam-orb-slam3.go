@@ -77,21 +77,25 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 }
 
 func init() {
-	registry.RegisterService(
-		slam.Subtype,
-		Model,
-		registry.Service{
-			Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
-				return New(ctx, deps, c, logger, false, DefaultExecutableName)
-			},
-		})
+	registry.RegisterService(slam.Subtype, Model, registry.Service{
+		Constructor: func(ctx context.Context, deps registry.Dependencies, config config.Service, logger golog.Logger) (interface{}, error) {
+			return New(
+				ctx,
+				deps,
+				config,
+				logger,
+				false,
+				DefaultExecutableName,
+			)
+		},
+	})
 
 	config.RegisterServiceAttributeMapConverter(
 		slam.Subtype,
 		Model,
 		func(attributes config.AttributeMap) (interface{}, error) {
-			var conf slamConfig.AttrConfig
-			return config.TransformAttributeMapToStruct(&conf, attributes)
+			var attrCfg slamConfig.AttrConfig
+			return config.TransformAttributeMapToStruct(&attrCfg, attributes)
 		},
 		&slamConfig.AttrConfig{})
 }
