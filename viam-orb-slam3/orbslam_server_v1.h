@@ -15,14 +15,8 @@ using grpc::ServerContext;
 using grpc::ServerWriter;
 using viam::service::slam::v1::GetInternalStateRequest;
 using viam::service::slam::v1::GetInternalStateResponse;
-using viam::service::slam::v1::GetInternalStateStreamRequest;
-using viam::service::slam::v1::GetInternalStateStreamResponse;
 using viam::service::slam::v1::GetPointCloudMapRequest;
 using viam::service::slam::v1::GetPointCloudMapResponse;
-using viam::service::slam::v1::GetPointCloudMapStreamRequest;
-using viam::service::slam::v1::GetPointCloudMapStreamResponse;
-using viam::service::slam::v1::GetPositionNewRequest;
-using viam::service::slam::v1::GetPositionNewResponse;
 using viam::service::slam::v1::GetPositionRequest;
 using viam::service::slam::v1::GetPositionResponse;
 using viam::service::slam::v1::SLAMService;
@@ -36,33 +30,10 @@ extern std::atomic<bool> b_continue_session;
 // Byte limit on unary GRPC calls
 static const int maximumGRPCByteLimit = 32 * 1024 * 1024;
 // Byte limit for chunks on GRPC, used for streaming apis
-static const int maximumGRPCByteChunkSize = 64 * 1024;
+static const int maximumGRPCByteChunkSize = 1 * 1024 * 1024;
 
 class SLAMServiceImpl final : public SLAMService::Service {
    public:
-    // For a given GetPositionNewRequest
-    // Returns a GetPositionNewResponse containing
-    // the current pose and component_reference of the SLAM
-    // sensor.
-    ::grpc::Status GetPositionNew(ServerContext *context,
-                                  const GetPositionNewRequest *request,
-                                  GetPositionNewResponse *response) override;
-
-    // GetPointCloudMap returns a stream containing a sparse
-    // slam map as Binary PCD. In chunks of size maximumGRPCByteChunkSize.
-    // The z-axis represents the direction the camera is
-    // facing at the origin of the map
-    ::grpc::Status GetPointCloudMapStream(
-        ServerContext *context, const GetPointCloudMapStreamRequest *request,
-        ServerWriter<GetPointCloudMapStreamResponse> *writer) override;
-
-    // GetInternalStateStream returns a stream of the current internal state of
-    // the map represented as an ORB-SLAM Atlas(.osa) file in chunks of size
-    // maximumGRPCByteChunkSize
-    ::grpc::Status GetInternalStateStream(
-        ServerContext *context, const GetInternalStateStreamRequest *request,
-        ServerWriter<GetInternalStateStreamResponse> *writer) override;
-
     // For a given GetPositionRequest
     // Returns a GetPositionResponse containing
     // the current pose and component_reference of the SLAM

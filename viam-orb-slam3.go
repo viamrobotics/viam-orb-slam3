@@ -162,8 +162,6 @@ type orbslamService struct {
 	dataRateMs int
 	mapRateSec int
 
-	dev bool
-
 	cancelFunc              func()
 	logger                  golog.Logger
 	activeBackgroundWorkers sync.WaitGroup
@@ -259,24 +257,6 @@ func (orbSvc *orbslamService) GetPosition(ctx context.Context, name string) (spa
 	return slamUtils.CheckQuaternionFromClientAlgo(pose, componentReference, returnedExt)
 }
 
-// GetPointCloudMapStream creates a request, calls the slam algorithms GetPointCloudMapStream endpoint and returns a callback
-// function which will return the next chunk of the current pointcloud map.
-func (orbSvc *orbslamService) GetPointCloudMapStream(ctx context.Context, name string) (func() ([]byte, error), error) {
-	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPointCloudMapStream")
-	defer span.End()
-
-	return grpchelper.GetPointCloudMapCallback(ctx, name, orbSvc.clientAlgo)
-}
-
-// GetInternalStateStream creates a request, calls the slam algorithms GetInternalStateStream endpoint and returns a callback
-// function which will return the next chunk of the current internal state of the slam algo.
-func (orbSvc *orbslamService) GetInternalStateStream(ctx context.Context, name string) (func() ([]byte, error), error) {
-	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetInternalStateStream")
-	defer span.End()
-
-	return grpchelper.GetInternalStateCallback(ctx, name, orbSvc.clientAlgo)
-}
-
 // GetPointCloudMap creates a request, calls the slam algorithms GetPointCloudMap endpoint and returns a callback
 // function which will return the next chunk of the current pointcloud map.
 func (orbSvc *orbslamService) GetPointCloudMap(ctx context.Context, name string) (func() ([]byte, error), error) {
@@ -370,7 +350,6 @@ func New(ctx context.Context,
 		cancelFunc:            cancelFunc,
 		logger:                logger,
 		bufferSLAMProcessLogs: bufferSLAMProcessLogs,
-		dev:                   svcConfig.Dev,
 	}
 
 	var success bool
