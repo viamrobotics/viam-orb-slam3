@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/edaniels/golog"
-	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 	pb "go.viam.com/api/service/slam/v1"
@@ -79,21 +78,26 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 
 func init() {
 	registry.RegisterService(slam.Subtype, Model, registry.Service{
-		Constructor: func(ctx context.Context, deps registry.Dependencies, c config.Service, logger golog.Logger) (interface{}, error) {
-			return New(ctx, deps, c, logger, false, DefaultExecutableName)
+		Constructor: func(ctx context.Context, deps registry.Dependencies, config config.Service, logger golog.Logger) (interface{}, error) {
+			return New(
+				ctx,
+				deps,
+				config,
+				logger,
+				false,
+				DefaultExecutableName,
+			)
 		},
 	})
-	config.RegisterServiceAttributeMapConverter(slam.Subtype, Model, func(attributes config.AttributeMap) (interface{}, error) {
-		var attrs slamConfig.AttrConfig
-		decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{TagName: "json", Result: &attrs})
-		if err != nil {
-			return nil, err
-		}
-		if err := decoder.Decode(attributes); err != nil {
-			return nil, err
-		}
-		return &attrs, nil
-	}, &slamConfig.AttrConfig{})
+
+	config.RegisterServiceAttributeMapConverter(
+		slam.Subtype,
+		Model,
+		func(attributes config.AttributeMap) (interface{}, error) {
+			var attrCfg slamConfig.AttrConfig
+			return config.TransformAttributeMapToStruct(&attrCfg, attributes)
+		},
+		&slamConfig.AttrConfig{})
 }
 
 // runtimeServiceValidation ensures the service's data processing and saving is valid for the mode and
@@ -333,7 +337,9 @@ func New(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	cancelCtx, cancelFunc := context.WithCancel(ctx)
+
+	// 'ctx' is the Context of a gRPC call, so use a new Context for anything that will outlive the gRPC call.
+	cancelCtx, cancelFunc := context.WithCancel(context.Background())
 
 	// SLAM Service Object
 	orbSvc := &orbslamService{
