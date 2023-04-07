@@ -1,6 +1,6 @@
 {
   "modules": [
-     {
+    {
       "name": "orb_slam3_module",
       "executable_path": "/usr/local/bin/orb-slam3-module"
     }
