@@ -70,8 +70,11 @@ else
 	cd viam-orb-slam3 && ./scripts/setup_orbslam_linux.sh
 endif
 
-build:
+build: build-module
 	cd viam-orb-slam3 && ./scripts/build_orbslam.sh
+
+build-module:
+	mkdir -p bin && go build -o bin/orb-slam3-module module/main.go
 
 test-module-wrapper:
 	go test -race ./...
