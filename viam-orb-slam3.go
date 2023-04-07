@@ -337,7 +337,7 @@ func New(ctx context.Context,
 		return nil, err
 	}
 
-	// In a module, ctx is short-lived which can cause the data process to exit early
+	// 'ctx' is the Context of a gRPC call, so use a new Context for anything that will outlive the gRPC call.
 	cancelCtx, cancelFunc := context.WithCancel(context.Background())
 
 	// SLAM Service Object
