@@ -6,6 +6,11 @@ on:
     secrets:
       GCP_CREDENTIALS:
         required: true
+  push:
+    branches: main
+    paths-ignore:
+      - 'README.md'
+
 
 jobs:
   appimage:
