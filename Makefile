@@ -88,6 +88,8 @@ install:
 	sudo cp viam-orb-slam3/bin/orb_grpc_server /usr/local/bin/orb_grpc_server
 
 appimage: build
+	cd etc/packaging/appimages && BUILD_CHANNEL=${BUILD_CHANNEL} appimage-builder --recipe orb_grpc_server-`uname -m`.yml
+	cd etc/packaging/appimages && ./package_release_orb.sh
 	cd etc/packaging/appimages && BUILD_CHANNEL=${BUILD_CHANNEL} appimage-builder --recipe orb-slam3-module-`uname -m`.yml
 	cd etc/packaging/appimages && ./package_release_module.sh
 	mkdir -p etc/packaging/appimages/deploy/
