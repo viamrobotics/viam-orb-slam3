@@ -17,6 +17,7 @@ buf: bufsetup
 
 clean:
 	rm -rf grpc
+	rm -rf bin
 	rm -rf viam-orb-slam3/build
 	rm -rf viam-orb-slam3/ORB_SLAM3/build
 	rm -rf viam-orb-slam3/ORB_SLAM3/lib
