@@ -94,8 +94,8 @@ func init() {
 		slam.Subtype,
 		Model,
 		func(attributes config.AttributeMap) (interface{}, error) {
-			var attrCfg slamConfig.AttrConfig
-			return config.TransformAttributeMapToStruct(&attrCfg, attributes)
+			var conf slamConfig.AttrConfig
+			return config.TransformAttributeMapToStruct(&conf, attributes)
 		},
 		&slamConfig.AttrConfig{})
 }
@@ -489,11 +489,25 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	args = append(args, "-port="+orbSvc.port)
 	args = append(args, "--aix-auto-update")
 
+	target := orbSvc.executableName
+
+	appDir := os.Getenv("APPDIR")
+
+	if appDir != "" {
+		// The orb grpc server is expected to be in
+		// /usr/bin/ if we are running in an appimage.
+		target = appDir + "/usr/bin/" + strings.TrimPrefix(target, "/")
+	}
+
 	return pexec.ProcessConfig{
-		ID:      "slam_orbslamv3",
-		Name:    orbSvc.executableName,
-		Args:    args,
-		Log:     true,
+		ID:   "slam_orbslamv3",
+		Name: target,
+		Args: args,
+		Log:  true,
+		// In appimage this is set to the appimage
+		// squashfs mount location (/tmp/.mountXXXXX)
+		// Otherwise, it is an empty string
+		CWD:     os.Getenv("APPRUN_RUNTIME"),
 		OneShot: false,
 	}
 }

@@ -17,6 +17,7 @@ buf: bufsetup
 
 clean:
 	rm -rf grpc
+	rm -rf bin
 	rm -rf viam-orb-slam3/build
 	rm -rf viam-orb-slam3/ORB_SLAM3/build
 	rm -rf viam-orb-slam3/ORB_SLAM3/lib
@@ -90,7 +91,8 @@ install:
 appimage: build
 	cd etc/packaging/appimages && BUILD_CHANNEL=${BUILD_CHANNEL} appimage-builder --recipe orb_grpc_server-`uname -m`.yml
 	cd etc/packaging/appimages && ./package_release_orb.sh
+	cd etc/packaging/appimages && BUILD_CHANNEL=${BUILD_CHANNEL} appimage-builder --recipe orb-slam3-module-`uname -m`.yml
+	cd etc/packaging/appimages && ./package_release_module.sh
 	mkdir -p etc/packaging/appimages/deploy/
 	mv etc/packaging/appimages/*.AppImage* etc/packaging/appimages/deploy/
 	chmod 755 etc/packaging/appimages/deploy/*.AppImage
-
