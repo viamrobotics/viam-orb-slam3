@@ -11,13 +11,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rhysd/actionlint v1.6.23
 	go.opencensus.io v0.24.0
-<<<<<<< HEAD
 	go.viam.com/api v0.1.111
 	go.viam.com/rdk v0.2.36-0.20230418150856-5d2512bfb70e
-=======
-	go.viam.com/api v0.1.106
-	go.viam.com/rdk v0.2.34-0.20230407220031-b6a992c7135b
->>>>>>> 213d407f5a88db9544be03bf85d388bda4ca1b81
 	go.viam.com/slam v0.1.33
 	go.viam.com/test v1.1.1-0.20220913152726-5da9916c08a2
 	go.viam.com/utils v0.1.18-0.20230327140716-bfeb34d89117
@@ -206,19 +201,11 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/pion/datachannel v1.5.5 // indirect
 	github.com/pion/dtls/v2 v2.2.6 // indirect
-<<<<<<< HEAD
 	github.com/pion/ice/v2 v2.3.2 // indirect
 	github.com/pion/interceptor v0.1.12 // indirect
 	github.com/pion/logging v0.2.2 // indirect
 	github.com/pion/mdns v0.0.7 // indirect
 	github.com/pion/mediadevices v0.4.1-0.20230412180714-14bfaa5dbdd3 // indirect
-=======
-	github.com/pion/ice/v2 v2.3.1 // indirect
-	github.com/pion/interceptor v0.1.12 // indirect
-	github.com/pion/logging v0.2.2 // indirect
-	github.com/pion/mdns v0.0.7 // indirect
-	github.com/pion/mediadevices v0.4.1-0.20230329214258-b9ce5bb861da // indirect
->>>>>>> 213d407f5a88db9544be03bf85d388bda4ca1b81
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/rtcp v1.2.10 // indirect
 	github.com/pion/rtp v1.7.13 // indirect
@@ -226,17 +213,10 @@ require (
 	github.com/pion/sdp/v3 v3.0.6 // indirect
 	github.com/pion/srtp/v2 v2.0.12 // indirect
 	github.com/pion/stun v0.4.0 // indirect
-<<<<<<< HEAD
 	github.com/pion/transport/v2 v2.1.0 // indirect
 	github.com/pion/turn/v2 v2.1.0 // indirect
 	github.com/pion/udp/v2 v2.0.1 // indirect
 	github.com/pion/webrtc/v3 v3.1.59 // indirect
-=======
-	github.com/pion/transport/v2 v2.0.2 // indirect
-	github.com/pion/turn/v2 v2.1.0 // indirect
-	github.com/pion/udp/v2 v2.0.1 // indirect
-	github.com/pion/webrtc/v3 v3.1.58 // indirect
->>>>>>> 213d407f5a88db9544be03bf85d388bda4ca1b81
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polyfloyd/go-errorlint v1.1.0 // indirect
 	github.com/prometheus/client_golang v1.12.2 // indirect
@@ -305,7 +285,6 @@ require (
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	goji.io v2.0.2+incompatible // indirect
-<<<<<<< HEAD
 	golang.org/x/crypto v0.8.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20230203172020-98cc5a0785f9 // indirect
 	golang.org/x/image v0.7.0 // indirect
@@ -315,17 +294,6 @@ require (
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
-=======
-	golang.org/x/crypto v0.7.0 // indirect
-	golang.org/x/exp/typeparams v0.0.0-20230203172020-98cc5a0785f9 // indirect
-	golang.org/x/image v0.6.0 // indirect
-	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/oauth2 v0.6.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
->>>>>>> 213d407f5a88db9544be03bf85d388bda4ca1b81
 	golang.org/x/tools v0.7.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gonum.org/v1/gonum v0.12.0 // indirect
