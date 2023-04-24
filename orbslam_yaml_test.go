@@ -15,13 +15,14 @@ import (
 	"github.com/edaniels/golog"
 	"github.com/pkg/errors"
 	"go.viam.com/rdk/rimage/transform"
-	"go.viam.com/rdk/services/slam/builtin"
 	slamConfig "go.viam.com/slam/config"
 	"go.viam.com/slam/dataprocess"
 	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
 	"go.viam.com/utils"
 	"gopkg.in/yaml.v2"
+
+	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
 )
 
 const yamlFilePrefixBytes = "%YAML:1.0\n"
@@ -134,7 +135,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		test.That(t, yamlDataAll[:len(yamlFilePrefixBytes)], test.ShouldResemble, []byte(yamlFilePrefixBytes))
 
 		yamlData := bytes.Replace(yamlDataAll, []byte(yamlFilePrefixBytes), []byte(""), 1)
-		orbslam := builtin.ORBsettings{}
+		orbslam := viamorbslam3.ORBsettings{}
 		err = yaml.Unmarshal(yamlData, &orbslam)
 		test.That(t, err, test.ShouldBeNil)
 		test.That(t, orbslam.Width, test.ShouldEqual, 1280)
@@ -170,7 +171,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		yamlDataAll, err := os.ReadFile(yamlFilePathGood)
 		test.That(t, err, test.ShouldBeNil)
 		yamlData := bytes.Replace(yamlDataAll, []byte(yamlFilePrefixBytes), []byte(""), 1)
-		orbslam := builtin.ORBsettings{}
+		orbslam := viamorbslam3.ORBsettings{}
 		err = yaml.Unmarshal(yamlData, &orbslam)
 		test.That(t, err, test.ShouldBeNil)
 		test.That(t, orbslam.LoadMapLoc, test.ShouldEqual, "\""+fakeMap+"\"")
@@ -197,7 +198,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		test.That(t, yamlDataAll[:len(yamlFilePrefixBytes)], test.ShouldResemble, []byte(yamlFilePrefixBytes))
 
 		yamlData := bytes.Replace(yamlDataAll, []byte(yamlFilePrefixBytes), []byte(""), 1)
-		orbslam := builtin.ORBsettings{}
+		orbslam := viamorbslam3.ORBsettings{}
 		err = yaml.Unmarshal(yamlData, &orbslam)
 		test.That(t, err, test.ShouldBeNil)
 
