@@ -18,15 +18,11 @@ import (
 	"go.opencensus.io/trace"
 	pb "go.viam.com/api/service/slam/v1"
 	"go.viam.com/rdk/components/camera"
-	"go.viam.com/rdk/components/generic"
-	"go.viam.com/rdk/config"
-	"go.viam.com/rdk/registry"
 	"go.viam.com/rdk/resource"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/services/slam"
 	"go.viam.com/rdk/services/slam/grpchelper"
 	"go.viam.com/rdk/spatialmath"
-	rdkutils "go.viam.com/rdk/utils"
 	slamConfig "go.viam.com/slam/config"
 	"go.viam.com/slam/dataprocess"
 	slamSensorUtils "go.viam.com/slam/sensors/utils"
@@ -77,27 +73,23 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 }
 
 func init() {
-	registry.RegisterService(slam.Subtype, Model, registry.Service{
-		Constructor: func(ctx context.Context, deps registry.Dependencies, config config.Service, logger golog.Logger) (interface{}, error) {
+	resource.RegisterService(slam.API, Model, resource.Registration[slam.Service, *slamConfig.Config]{
+		Constructor: func(
+			ctx context.Context,
+			deps resource.Dependencies,
+			c resource.Config,
+			logger golog.Logger,
+		) (slam.Service, error) {
 			return New(
 				ctx,
 				deps,
-				config,
+				c,
 				logger,
 				false,
 				DefaultExecutableName,
 			)
 		},
 	})
-
-	config.RegisterServiceAttributeMapConverter(
-		slam.Subtype,
-		Model,
-		func(attributes config.AttributeMap) (interface{}, error) {
-			var conf slamConfig.AttrConfig
-			return config.TransformAttributeMapToStruct(&conf, attributes)
-		},
-		&slamConfig.AttrConfig{})
 }
 
 // runtimeServiceValidation ensures the service's data processing and saving is valid for the mode and
@@ -149,8 +141,8 @@ func runtimeServiceValidation(
 
 // orbslamService is the structure of the ORB_SLAM3 slam service.
 type orbslamService struct {
-	generic.Unimplemented
-	name              string
+	resource.Named
+	resource.AlwaysRebuild
 	primarySensorName string
 	subAlgo           SubAlgo
 	executableName    string // by default: DefaultExecutableName
@@ -181,8 +173,8 @@ type orbslamService struct {
 // the robot. We assume there are at most two cameras and that we only require intrinsics from the first one.
 // Returns the name of the first camera.
 func configureCameras(ctx context.Context,
-	svcConfig *slamConfig.AttrConfig,
-	deps registry.Dependencies,
+	svcConfig *slamConfig.Config,
+	deps resource.Dependencies,
 	logger golog.Logger,
 ) (string, []camera.Camera, error) {
 	if len(svcConfig.Sensors) > 0 {
@@ -249,7 +241,7 @@ func (orbSvc *orbslamService) GetPosition(ctx context.Context) (spatialmath.Pose
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPosition")
 	defer span.End()
 
-	req := &pb.GetPositionRequest{Name: orbSvc.name}
+	req := &pb.GetPositionRequest{Name: orbSvc.Name().ShortName()}
 
 	resp, err := orbSvc.clientAlgo.GetPosition(ctx, req)
 	if err != nil {
@@ -268,7 +260,7 @@ func (orbSvc *orbslamService) GetPointCloudMap(ctx context.Context) (func() ([]b
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetPointCloudMap")
 	defer span.End()
 
-	return grpchelper.GetPointCloudMapCallback(ctx, orbSvc.name, orbSvc.clientAlgo)
+	return grpchelper.GetPointCloudMapCallback(ctx, orbSvc.Name().ShortName(), orbSvc.clientAlgo)
 }
 
 // GetInternalState creates a request, calls the slam algorithms GetInternalState endpoint and returns a callback
@@ -277,13 +269,13 @@ func (orbSvc *orbslamService) GetInternalState(ctx context.Context) (func() ([]b
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::orbslamService::GetInternalState")
 	defer span.End()
 
-	return grpchelper.GetInternalStateCallback(ctx, orbSvc.name, orbSvc.clientAlgo)
+	return grpchelper.GetInternalStateCallback(ctx, orbSvc.Name().ShortName(), orbSvc.clientAlgo)
 }
 
 // New returns a new slam service for the given robot.
 func New(ctx context.Context,
-	deps registry.Dependencies,
-	config config.Service,
+	deps resource.Dependencies,
+	c resource.Config,
 	logger golog.Logger,
 	bufferSLAMProcessLogs bool,
 	executableName string,
@@ -291,9 +283,9 @@ func New(ctx context.Context,
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()
 
-	svcConfig, ok := config.ConvertedAttributes.(*slamConfig.AttrConfig)
-	if !ok {
-		return nil, rdkutils.NewUnexpectedTypeError(svcConfig, config.ConvertedAttributes)
+	svcConfig, err := resource.NativeConfig[*slamConfig.Config](c)
+	if err != nil {
+		return nil, err
 	}
 
 	primarySensorName, cams, err := configureCameras(ctx, svcConfig, deps, logger)
@@ -304,7 +296,7 @@ func New(ctx context.Context,
 	subAlgo := SubAlgo(svcConfig.ConfigParams["mode"])
 	if !slices.Contains(supportedSubAlgos, subAlgo) {
 		return nil, errors.Errorf("%v does not have a mode %v",
-			config.Model.Name, svcConfig.ConfigParams["mode"])
+			c.Model.Name, svcConfig.ConfigParams["mode"])
 	}
 
 	if err = slamConfig.SetupDirectories(svcConfig.DataDirectory, logger); err != nil {
@@ -343,7 +335,7 @@ func New(ctx context.Context,
 
 	// SLAM Service Object
 	orbSvc := &orbslamService{
-		name:                  config.Name,
+		Named:                 c.ResourceName().AsNamed(),
 		primarySensorName:     primarySensorName,
 		subAlgo:               subAlgo,
 		executableName:        executableName,
@@ -363,7 +355,7 @@ func New(ctx context.Context,
 	var success bool
 	defer func() {
 		if !success {
-			if err := orbSvc.Close(); err != nil {
+			if err := orbSvc.Close(ctx); err != nil {
 				logger.Errorw("error closing out after error", "error", err)
 			}
 		}
@@ -391,7 +383,7 @@ func New(ctx context.Context,
 }
 
 // Close closes out of all slam-related processes.
-func (orbSvc *orbslamService) Close() error {
+func (orbSvc *orbslamService) Close(ctx context.Context) error {
 	defer func() {
 		if orbSvc.clientAlgoClose != nil {
 			goutils.UncheckedErrorFunc(orbSvc.clientAlgoClose)
