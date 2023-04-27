@@ -209,7 +209,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 			line, err := logReader.ReadString('\n')
 			test.That(t, err, test.ShouldBeNil)
 			if strings.Contains(line, "Passed image to SLAM") {
-				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slamTesthelper.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
+				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(
+					t,
+					slamTesthelper.Mode(subAlgo),
+					name,
+					prevNumFiles,
+					deleteProcessedData,
+					useLiveData)
 				break
 			}
 			test.That(t, strings.Contains(line, "Fail to track local map!"), test.ShouldBeFalse)
@@ -306,7 +312,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 		line, err := logReader.ReadString('\n')
 		test.That(t, err, test.ShouldBeNil)
 		if strings.Contains(line, "Passed image to SLAM") {
-			prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slamTesthelper.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
+			prevNumFiles = slamTesthelper.CheckDeleteProcessedData(
+				t,
+				slamTesthelper.Mode(subAlgo),
+				name,
+				prevNumFiles,
+				deleteProcessedData,
+				useLiveData)
 			startTimeSentImage = time.Now()
 		}
 		if strings.Contains(line, "Finished processing offline images") {
@@ -417,7 +429,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 			line, err := logReader.ReadString('\n')
 			test.That(t, err, test.ShouldBeNil)
 			if strings.Contains(line, "Passed image to SLAM") {
-				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slamTesthelper.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
+				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(
+					t,
+					slamTesthelper.Mode(subAlgo),
+					name,
+					prevNumFiles,
+					deleteProcessedData,
+					useLiveData)
 				break
 			}
 			test.That(t, strings.Contains(line, "Fail to track local map!"), test.ShouldBeFalse)

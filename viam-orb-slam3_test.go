@@ -474,7 +474,7 @@ func TestGeneralNew(t *testing.T) {
 		_, err := createSLAMService(t, attrCfg, logger, false, false, testExecutableName)
 		test.That(t, err, test.ShouldBeError,
 			errors.New("configuring camera error: error getting camera gibberish for slam service: "+
-				"\"gibberish\" missing from dependencies"))
+				"\"rdk:component:camera/gibberish\" missing from dependencies"))
 	})
 
 	closeOutSLAMService(t, name)
@@ -531,13 +531,12 @@ func TestORBSLAMNew(t *testing.T) {
 		}
 
 		// Create slam service
-		svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
+		_, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 		expectedError := errors.New("configuring camera error: error getting distortion_parameters for slam " +
 			"service, only BrownConrady distortion parameters are supported").Error()
 		test.That(t, err.Error(), test.ShouldContainSubstring, expectedError)
 
 		grpcServer.Stop()
-		test.That(t, svc.Close(context.Background()), test.ShouldBeNil)
 	})
 
 	t.Run("New orbslamv3 service that errors due to not being able to get camera properties", func(t *testing.T) {
@@ -553,13 +552,12 @@ func TestORBSLAMNew(t *testing.T) {
 
 		// Create slam service
 		logger := golog.NewTestLogger(t)
-		svc, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
+		_, err := createSLAMService(t, attrCfg, logger, false, true, testExecutableName)
 		expectedError := errors.New("configuring camera error: error getting camera properties for slam " +
 			"service: somehow couldn't get properties").Error()
 		test.That(t, err.Error(), test.ShouldContainSubstring, expectedError)
 
 		grpcServer.Stop()
-		test.That(t, svc.Close(context.Background()), test.ShouldBeNil)
 	})
 
 	t.Run("New orbslamv3 service in slam mode rgbd that errors due cameras in the wrong order", func(t *testing.T) {
