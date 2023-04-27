@@ -24,7 +24,7 @@ func mainWithArgs(ctx context.Context, args []string, logger golog.Logger) error
 	}
 
 	// Add model to the module
-	if err = orbModule.AddModelFromRegistry(ctx, slam.Subtype, viamorbslam3.Model); err != nil {
+	if err = orbModule.AddModelFromRegistry(ctx, slam.API, viamorbslam3.Model); err != nil {
 		return err
 	}
 

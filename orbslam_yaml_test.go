@@ -19,7 +19,6 @@ import (
 	"go.viam.com/slam/dataprocess"
 	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
-	"go.viam.com/utils"
 	"gopkg.in/yaml.v2"
 
 	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
@@ -67,7 +66,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 
 	useLiveData := true
 	dataRateMs := 200
-	attrCfgGood := &slamConfig.AttrConfig{
+	attrCfgGood := &slamConfig.Config{
 		Sensors: []string{"good_color_camera"},
 		ConfigParams: map[string]string{
 			"mode":              "mono",
@@ -82,7 +81,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		Port:          "localhost:4445",
 		UseLiveData:   &useLiveData,
 	}
-	attrCfgGoodHighDataRateMsec := &slamConfig.AttrConfig{
+	attrCfgGoodHighDataRateMsec := &slamConfig.Config{
 		Sensors: []string{"good_color_camera"},
 		ConfigParams: map[string]string{
 			"mode":              "mono",
@@ -97,7 +96,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		Port:          "localhost:4445",
 		UseLiveData:   &useLiveData,
 	}
-	attrCfgBadCam := &slamConfig.AttrConfig{
+	attrCfgBadCam := &slamConfig.Config{
 		Sensors: []string{"bad_camera_intrinsics"},
 		ConfigParams: map[string]string{
 			"mode":              "mono",
@@ -123,7 +122,8 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
-		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
+
+		test.That(t, svc.Close(context.Background()), test.ShouldBeNil)
 
 		yamlFileTimeStampGood, yamlFilePathGood, err := findLastYAML(name)
 
@@ -160,7 +160,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
-		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
+		test.That(t, svc.Close(context.Background()), test.ShouldBeNil)
 
 		// Should have the same name due to map being found
 		yamlFileTimeStampGood, yamlFilePathGood, err := findLastYAML(name)
@@ -186,7 +186,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		test.That(t, err, test.ShouldBeNil)
 
 		grpcServer.Stop()
-		test.That(t, utils.TryClose(context.Background(), svc), test.ShouldBeNil)
+		test.That(t, svc.Close(context.Background()), test.ShouldBeNil)
 
 		yamlFileTimeStampGood, yamlFilePathGood, err := findLastYAML(name)
 
@@ -216,7 +216,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service with camera that errors from bad orbslam params", func(t *testing.T) {
 		// check if a param is empty
-		attrCfgBadParam1 := &slamConfig.AttrConfig{
+		attrCfgBadParam1 := &slamConfig.Config{
 			Sensors: []string{"good_color_camera"},
 			ConfigParams: map[string]string{
 				"mode":              "mono",
@@ -235,7 +235,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		_, err := createSLAMService(t, attrCfgBadParam1, logger, false, false, testExecutableName)
 		test.That(t, err.Error(), test.ShouldContainSubstring, "Parameter orb_n_features has an invalid definition")
 
-		attrCfgBadParam2 := &slamConfig.AttrConfig{
+		attrCfgBadParam2 := &slamConfig.Config{
 			Sensors: []string{"good_color_camera"},
 			ConfigParams: map[string]string{
 				"mode":              "mono",
