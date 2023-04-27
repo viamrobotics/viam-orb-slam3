@@ -14,13 +14,13 @@ Install viam-orb-slam3:
 
 * Linux aarch64:
     ```bash
-    sudo curl -o /usr/local/bin/orb_grpc_server http://packages.viam.com/apps/slam-servers/orb_grpc_server-stable-aarch64.AppImage
-    sudo chmod a+rx /usr/local/bin/orb_grpc_server
+    sudo curl -o /usr/local/bin/orb-slam3-module http://packages.viam.com/apps/slam-servers/orb-slam3-module-latest-aarch64.AppImage
+    sudo chmod a+rx /usr/local/bin/orb-slam3-module
     ```
  * Linux x86_64:
     ```bash
-    sudo curl -o /usr/local/bin/orb_grpc_server http://packages.viam.com/apps/slam-servers/orb_grpc_server-stable-x86_64.AppImage
-    sudo chmod a+rx /usr/local/bin/orb_grpc_server
+    sudo curl -o /usr/local/bin/orb-slam3-module http://packages.viam.com/apps/slam-servers/orb-slam3-module-latest-x86_64.AppImage
+    sudo chmod a+rx /usr/local/bin/orb-slam3-module
     ```
 
 * Homebrew / Linuxbrew
@@ -70,9 +70,9 @@ make bufinstall buf
 make setup
 # Build & install the binary
 make build
-sudo cp ./viam-orb-slam3/bin/orb_grpc_server /usr/local/bin
+make install
 # Run the binary
-orb_grpc_server
+orb-slam3-module
 ```
 
 #### Alternative: Manual Dependency Install (x64 or arm64)
