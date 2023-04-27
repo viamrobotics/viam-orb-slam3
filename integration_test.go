@@ -143,7 +143,8 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
-	createVocabularyFile(name)
+	err = createVocabularyFile(name)
+	test.That(t, err, test.ShouldBeNil)
 	prevNumFiles := 0
 
 	t.Log("\n=== Testing online mode ===\n")
@@ -209,9 +210,9 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 			line, err := logReader.ReadString('\n')
 			test.That(t, err, test.ShouldBeNil)
 			if strings.Contains(line, "Passed image to SLAM") {
-				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(
+				prevNumFiles = testhelper.CheckDeleteProcessedData(
 					t,
-					slamTesthelper.Mode(subAlgo),
+					subAlgo,
 					name,
 					prevNumFiles,
 					deleteProcessedData,
@@ -312,9 +313,9 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 		line, err := logReader.ReadString('\n')
 		test.That(t, err, test.ShouldBeNil)
 		if strings.Contains(line, "Passed image to SLAM") {
-			prevNumFiles = slamTesthelper.CheckDeleteProcessedData(
+			prevNumFiles = testhelper.CheckDeleteProcessedData(
 				t,
-				slamTesthelper.Mode(subAlgo),
+				subAlgo,
 				name,
 				prevNumFiles,
 				deleteProcessedData,
@@ -429,9 +430,9 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 			line, err := logReader.ReadString('\n')
 			test.That(t, err, test.ShouldBeNil)
 			if strings.Contains(line, "Passed image to SLAM") {
-				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(
+				prevNumFiles = testhelper.CheckDeleteProcessedData(
 					t,
-					slamTesthelper.Mode(subAlgo),
+					subAlgo,
 					name,
 					prevNumFiles,
 					deleteProcessedData,
