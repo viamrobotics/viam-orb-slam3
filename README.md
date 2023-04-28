@@ -14,12 +14,12 @@ Install viam-orb-slam3:
 
 * Linux aarch64:
     ```bash
-    sudo curl -o /usr/local/bin/orb-slam3-module http://packages.viam.com/apps/slam-servers/orb-slam3-module-latest-aarch64.AppImage
+    sudo curl -o /usr/local/bin/orb-slam3-module https://storage.googleapis.com/packages.viam.com/apps/slam-servers/orb-slam3-module-latest-aarch64.AppImage
     sudo chmod a+rx /usr/local/bin/orb-slam3-module
     ```
  * Linux x86_64:
     ```bash
-    sudo curl -o /usr/local/bin/orb-slam3-module http://packages.viam.com/apps/slam-servers/orb-slam3-module-latest-x86_64.AppImage
+    sudo curl -o /usr/local/bin/orb-slam3-module https://storage.googleapis.com/packages.viam.com/apps/slam-servers/orb-slam3-module-latest-x86_64.AppImage
     sudo chmod a+rx /usr/local/bin/orb-slam3-module
     ```
 
