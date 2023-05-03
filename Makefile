@@ -17,6 +17,7 @@ buf: bufsetup
 
 clean:
 	rm -rf grpc
+	rm -rf bin
 	rm -rf viam-orb-slam3/build
 	rm -rf viam-orb-slam3/ORB_SLAM3/build
 	rm -rf viam-orb-slam3/ORB_SLAM3/lib
@@ -24,6 +25,9 @@ clean:
 	rm -rf viam-orb-slam3/ORB_SLAM3/Thirdparty/g2o/build
 	rm -rf viam-orb-slam3/ORB_SLAM3/Thirdparty/Sophus/build
 	rm -rf viam-orb-slam3/bin
+
+clean-all:
+	git clean -fxd
 
 ensure-submodule-initialized:
 	@if [ ! -d "viam-orb-slam3/ORB_SLAM3/src" ]; then \
@@ -70,8 +74,11 @@ else
 	cd viam-orb-slam3 && ./scripts/setup_orbslam_linux.sh
 endif
 
-build:
+build: build-module
 	cd viam-orb-slam3 && ./scripts/build_orbslam.sh
+
+build-module:
+	mkdir -p bin && go build -o bin/orb-slam3-module module/main.go
 
 test-module-wrapper:
 	go test -race ./...
@@ -83,11 +90,11 @@ test: test-core test-module-wrapper
 
 install:
 	sudo cp viam-orb-slam3/bin/orb_grpc_server /usr/local/bin/orb_grpc_server
+	sudo cp bin/orb-slam3-module /usr/local/bin/orb-slam3-module
 
 appimage: build
-	cd etc/packaging/appimages && BUILD_CHANNEL=${BUILD_CHANNEL} appimage-builder --recipe orb_grpc_server-`uname -m`.yml
-	cd etc/packaging/appimages && ./package_release_orb.sh
+	cd etc/packaging/appimages && BUILD_CHANNEL=${BUILD_CHANNEL} appimage-builder --recipe orb-slam3-module-`uname -m`.yml
+	cd etc/packaging/appimages && ./package_release_module.sh
 	mkdir -p etc/packaging/appimages/deploy/
 	mv etc/packaging/appimages/*.AppImage* etc/packaging/appimages/deploy/
 	chmod 755 etc/packaging/appimages/deploy/*.AppImage
-

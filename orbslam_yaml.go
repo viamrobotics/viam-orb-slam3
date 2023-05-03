@@ -53,9 +53,9 @@ func (orbSvc *orbslamService) orbCamMaker(camProperties *transform.PinholeCamera
 	if orbslam.FPSCamera == 0 {
 		orbslam.FPSCamera = 1
 	}
-	distortion, ok := camProperties.Distortion.(*transform.BrownConrady)
-	if !ok {
-		return nil, utils.NewUnimplementedInterfaceError(distortion, camProperties.Distortion)
+	distortion, err := utils.AssertType[*transform.BrownConrady](camProperties.Distortion)
+	if err != nil {
+		return nil, err
 	}
 	orbslam.RadialK1 = distortion.RadialK1
 	orbslam.RadialK2 = distortion.RadialK2

@@ -1,0 +1,48 @@
+{
+  "components": [],
+  "modules": [
+    {
+      "executable_path": "/usr/local/bin/orb-slam3-module",
+      "name": "orb_slam3_module"
+    }
+  ],
+  "processes": [
+    {
+      "id": "intelrealgrpcserver",
+      "log": true,
+      "name": "/usr/local/bin/intelrealgrpcserver"
+    }
+  ],
+  "remotes": [
+    {
+      "address": "127.0.0.1:8085",
+      "insecure": true,
+      "name": "intel"
+    }
+  ],
+  "services": [
+    {
+      "attributes": {
+        "config_params": {
+          "mode": "rgbd",
+          "orb_n_features": "1000",
+          "orb_n_ini_th_fast": "20",
+          "orb_n_levels": "8",
+          "orb_n_min_th_fast": "7",
+          "orb_scale_factor": "1.2"
+        },
+        "data_dir": "/home/USERNAME/DATA_DIR",
+        "data_rate_msec": 500,
+        "map_rate_sec": 60,
+        "sensors": [
+          "intel:color",
+          "intel:depth"
+        ],
+        "use_live_data": true
+      },
+      "model": "viam:slam:orbslamv3",
+      "name": "moduleborb",
+      "type": "slam"
+    }
+  ]
+}

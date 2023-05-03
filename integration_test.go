@@ -21,7 +21,6 @@ import (
 	dataprocess "go.viam.com/slam/dataprocess"
 	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
-	"go.viam.com/utils"
 	"go.viam.com/utils/artifact"
 
 	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
@@ -76,7 +75,7 @@ func releaseImages(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 
 // testOrbslamMap checks the orbslam map and confirms there are more than zero map points.
 func testOrbslamMap(t *testing.T, svc slam.Service) {
-	pcd, err := slam.GetPointCloudMapFull(context.Background(), svc, "test")
+	pcd, err := slam.GetPointCloudMapFull(context.Background(), svc)
 	test.That(t, err, test.ShouldBeNil)
 	test.That(t, pcd, test.ShouldNotBeNil)
 
@@ -105,7 +104,7 @@ func testOrbslamPosition(t *testing.T, svc slam.Service, subAlgo viamorbslam3.Su
 		expectedOri = &spatialmath.R4AA{Theta: 0.002, RX: 0.602, RY: -0.772, RZ: -0.202}
 	}
 
-	position, componentRef, err := svc.GetPosition(context.Background(), "test")
+	position, componentRef, err := svc.GetPosition(context.Background())
 	test.That(t, err, test.ShouldBeNil)
 	test.That(t, componentRef, test.ShouldEqual, expectedComponentRef)
 
@@ -125,10 +124,10 @@ func testOrbslamPosition(t *testing.T, svc slam.Service, subAlgo viamorbslam3.Su
 
 // testOrbslamInternalState checks the orbslam internal state.
 func testOrbslamInternalState(t *testing.T, svc slam.Service, dataDir string) {
-	internalState, err := slam.GetInternalStateFull(context.Background(), svc, "test")
+	internalState, err := slam.GetInternalStateFull(context.Background(), svc)
 	test.That(t, err, test.ShouldBeNil)
 
-	// Save the data from the call to GetInternalStateStream for use in next test.
+	// Save the data from the call to GetInternalState for use in next test.
 	timeStamp := time.Now()
 	filename := filepath.Join(dataDir, "map", "orbslam_int_color_camera_data_"+timeStamp.UTC().Format(dataprocess.SlamTimeFormat)+".osa")
 	err = os.WriteFile(filename, internalState, 0o644)
@@ -144,7 +143,8 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	logger := golog.NewTestLogger(t)
 	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
-	createVocabularyFile(name)
+	err = createVocabularyFile(name)
+	test.That(t, err, test.ShouldBeNil)
 	prevNumFiles := 0
 
 	t.Log("\n=== Testing online mode ===\n")
@@ -170,7 +170,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	deleteProcessedData := false
 	useLiveData := true
 
-	attrCfg := &slamConfig.AttrConfig{
+	attrCfg := &slamConfig.Config{
 		Sensors: sensors,
 		ConfigParams: map[string]string{
 			"mode":              reflect.ValueOf(subAlgo).String(),
@@ -210,7 +210,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 			line, err := logReader.ReadString('\n')
 			test.That(t, err, test.ShouldBeNil)
 			if strings.Contains(line, "Passed image to SLAM") {
-				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slam.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
+				prevNumFiles = testhelper.CheckDeleteProcessedData(
+					t,
+					subAlgo,
+					name,
+					prevNumFiles,
+					deleteProcessedData,
+					useLiveData)
 				break
 			}
 			test.That(t, strings.Contains(line, "Fail to track local map!"), test.ShouldBeFalse)
@@ -229,7 +235,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	testOrbslamMap(t, svc)
 
 	// Close out slam service
-	err = utils.TryClose(context.Background(), svc)
+	err = svc.Close(context.Background())
 	if !orbslamHangs {
 		test.That(t, err, test.ShouldBeNil)
 	} else if err != nil {
@@ -276,7 +282,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	deleteProcessedData = false
 	useLiveData = false
 
-	attrCfg = &slamConfig.AttrConfig{
+	attrCfg = &slamConfig.Config{
 		Sensors: []string{},
 		ConfigParams: map[string]string{
 			"mode":              reflect.ValueOf(subAlgo).String(),
@@ -307,7 +313,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 		line, err := logReader.ReadString('\n')
 		test.That(t, err, test.ShouldBeNil)
 		if strings.Contains(line, "Passed image to SLAM") {
-			prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slam.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
+			prevNumFiles = testhelper.CheckDeleteProcessedData(
+				t,
+				subAlgo,
+				name,
+				prevNumFiles,
+				deleteProcessedData,
+				useLiveData)
 			startTimeSentImage = time.Now()
 		}
 		if strings.Contains(line, "Finished processing offline images") {
@@ -342,7 +354,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	testOrbslamInternalState(t, svc, name)
 
 	// Close out slam service
-	err = utils.TryClose(context.Background(), svc)
+	err = svc.Close(context.Background())
 	if !orbslamHangs {
 		test.That(t, err, test.ShouldBeNil)
 	} else if err != nil {
@@ -370,7 +382,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	deleteProcessedData = true
 	useLiveData = true
 
-	attrCfg = &slamConfig.AttrConfig{
+	attrCfg = &slamConfig.Config{
 		Sensors: sensors,
 		ConfigParams: map[string]string{
 			"mode":              reflect.ValueOf(subAlgo).String(),
@@ -418,7 +430,13 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 			line, err := logReader.ReadString('\n')
 			test.That(t, err, test.ShouldBeNil)
 			if strings.Contains(line, "Passed image to SLAM") {
-				prevNumFiles = slamTesthelper.CheckDeleteProcessedData(t, slam.Mode(subAlgo), name, prevNumFiles, deleteProcessedData, useLiveData)
+				prevNumFiles = testhelper.CheckDeleteProcessedData(
+					t,
+					subAlgo,
+					name,
+					prevNumFiles,
+					deleteProcessedData,
+					useLiveData)
 				break
 			}
 			test.That(t, strings.Contains(line, "Fail to track local map!"), test.ShouldBeFalse)
@@ -437,7 +455,7 @@ func integrationTestHelperOrbslam(t *testing.T, subAlgo viamorbslam3.SubAlgo) {
 	testOrbslamMap(t, svc)
 
 	// Close out slam service
-	err = utils.TryClose(context.Background(), svc)
+	err = svc.Close(context.Background())
 	if !orbslamHangs {
 		test.That(t, err, test.ShouldBeNil)
 	} else if err != nil {

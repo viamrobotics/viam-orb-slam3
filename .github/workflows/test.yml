@@ -80,19 +80,6 @@ jobs:
       run: |
         sudo cp viam-orb-slam3/viam-orb-slam3/bin/orb_grpc_server /usr/local/bin/orb_grpc_server
 
-    - name: Check out code in rdk directory
-      if: matrix.platform == 'linux/amd64'
-      uses: actions/checkout@v3
-      # Pulls main/HEAD from rdk to ensure no accidental regressions
-      with:
-        repository: viamrobotics/rdk 
-        path: rdk
-
-    - name: Run rdk orbslam integration tests
-      if: matrix.platform == 'linux/amd64'
-      run: |
-        sudo -u testbot bash -lc 'cd rdk/services/slam/builtin && sudo go test -v -race -run TestOrbslamIntegration'
-
     - name: Run viam-orb-slam3 integration tests
       if: matrix.platform == 'linux/amd64'
       run: |
