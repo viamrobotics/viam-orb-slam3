@@ -1,5 +1,4 @@
 // Package rgb implements the RGB sensor.
-// Warning: The code in this package might be transient. Stability is not guaranteed.
 package rgb
 
 import (

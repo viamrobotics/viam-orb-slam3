@@ -1,5 +1,4 @@
 // Package depth implements the Depth sensor.
-// Warning: The code in this package might be transient. Stability is not guaranteed.
 package depth
 
 import (
