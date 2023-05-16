@@ -7,8 +7,8 @@ import (
 	"context"
 	"testing"
 
+	orbSlamTesthelper "github.com/viamrobotics/viam-orb-slam3/testhelper"
 	"go.viam.com/rdk/components/camera"
-	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
 	"go.viam.com/utils/pexec"
 
@@ -43,14 +43,14 @@ func CheckDeleteProcessedData(
 ) int {
 	switch subAlgo {
 	case viamorbslam3.Mono:
-		numFiles, err := slamTesthelper.CheckDataDirForExpectedFiles(t, dir+"/data/rgb", prev, deleteProcessedData, useLiveData)
+		numFiles, err := orbSlamTesthelper.CheckDataDirForExpectedFiles(t, dir+"/data/rgb", prev, deleteProcessedData, useLiveData)
 		test.That(t, err, test.ShouldBeNil)
 		return numFiles
 	case viamorbslam3.Rgbd:
-		numFilesRGB, err := slamTesthelper.CheckDataDirForExpectedFiles(t, dir+"/data/rgb", prev, deleteProcessedData, useLiveData)
+		numFilesRGB, err := orbSlamTesthelper.CheckDataDirForExpectedFiles(t, dir+"/data/rgb", prev, deleteProcessedData, useLiveData)
 		test.That(t, err, test.ShouldBeNil)
 
-		numFilesDepth, err := slamTesthelper.CheckDataDirForExpectedFiles(t, dir+"/data/depth", prev, deleteProcessedData, useLiveData)
+		numFilesDepth, err := orbSlamTesthelper.CheckDataDirForExpectedFiles(t, dir+"/data/depth", prev, deleteProcessedData, useLiveData)
 		test.That(t, err, test.ShouldBeNil)
 
 		test.That(t, numFilesRGB, test.ShouldEqual, numFilesDepth)
