@@ -19,7 +19,6 @@ import (
 	"github.com/edaniels/gostream"
 	"github.com/pkg/errors"
 	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
-	orbSlamTesthelper "github.com/viamrobotics/viam-orb-slam3/testhelper"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/pointcloud"
 	"go.viam.com/rdk/resource"
@@ -67,7 +66,7 @@ func closeOutSLAMService(t *testing.T, name string) {
 	t.Helper()
 
 	if name != "" {
-		err := orbSlamTesthelper.ResetFolder(name)
+		err := testhelper.ResetFolder(name)
 		test.That(t, err, test.ShouldBeNil)
 	}
 }
@@ -437,7 +436,7 @@ func createSLAMService(
 
 func TestGeneralNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := orbSlamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	t.Run("New slam service with no camera", func(t *testing.T) {
@@ -482,7 +481,7 @@ func TestGeneralNew(t *testing.T) {
 
 func TestORBSLAMNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := orbSlamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	t.Run("New orbslamv3 service with good camera in slam mode rgbd", func(t *testing.T) {
@@ -643,7 +642,7 @@ func TestORBSLAMNew(t *testing.T) {
 
 func TestORBSLAMDataProcess(t *testing.T) {
 	logger, obs := golog.NewObservedTestLogger(t)
-	name, err := orbSlamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	grpcServer, port := setupTestGRPCServer(t)
@@ -719,7 +718,7 @@ func TestORBSLAMDataProcess(t *testing.T) {
 
 func TestEndpointFailures(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := orbSlamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	grpcServer, port := setupTestGRPCServer(t)
@@ -764,7 +763,7 @@ func TestEndpointFailures(t *testing.T) {
 
 func TestSLAMProcessSuccess(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := orbSlamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	t.Run("Test online SLAM process with default parameters", func(t *testing.T) {
@@ -854,7 +853,7 @@ func TestSLAMProcessSuccess(t *testing.T) {
 
 func TestSLAMProcessFail(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := orbSlamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	grpcServer, port := setupTestGRPCServer(t)

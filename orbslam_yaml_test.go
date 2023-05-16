@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
 	"github.com/viamrobotics/viam-orb-slam3/dataprocess"
-	orbSlamTesthelper "github.com/viamrobotics/viam-orb-slam3/testhelper"
+	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/test"
 	"gopkg.in/yaml.v2"
@@ -61,7 +61,7 @@ func findLastYAML(folderName string) (string, string, error) {
 
 func TestOrbslamYAMLNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := orbSlamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	useLiveData := true
