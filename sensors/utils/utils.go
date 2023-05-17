@@ -12,14 +12,6 @@ import (
 	"go.viam.com/rdk/utils"
 )
 
-// GetName returns the name of the sensor based on its index in the sensor array.
-func GetName(sensors []string, index int) (string, error) {
-	if index < 0 || index >= len(sensors) {
-		return "", errors.New("index out of bounds")
-	}
-	return sensors[index], nil
-}
-
 // GetPNGImage first attempts to get a lazy PNG image. If the image is not a lazy PNG, the
 // function expects it to be an YCBCR image. If it is neither a lazy PNG nor an YCBCR, the
 // function errors out. The returned function is a release function that must be called once
