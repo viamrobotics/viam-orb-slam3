@@ -8,7 +8,6 @@ import (
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/resource"
 	"go.viam.com/rdk/rimage/transform"
-
 	"go.viam.com/slam/sensors/utils"
 )
 

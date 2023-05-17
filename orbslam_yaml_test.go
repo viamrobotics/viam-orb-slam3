@@ -14,14 +14,14 @@ import (
 
 	"github.com/edaniels/golog"
 	"github.com/pkg/errors"
-	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
-	"github.com/viamrobotics/viam-orb-slam3/dataprocess"
-	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/test"
 	"gopkg.in/yaml.v2"
 
 	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
+	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
+	"github.com/viamrobotics/viam-orb-slam3/dataprocess"
+	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 
 const yamlFilePrefixBytes = "%YAML:1.0\n"

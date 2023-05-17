@@ -14,8 +14,6 @@ import (
 
 	"github.com/edaniels/golog"
 	"github.com/golang/geo/r3"
-	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
-	dataprocess "github.com/viamrobotics/viam-orb-slam3/dataprocess"
 	"go.viam.com/rdk/pointcloud"
 	"go.viam.com/rdk/services/slam"
 	"go.viam.com/rdk/spatialmath"
@@ -23,6 +21,8 @@ import (
 	"go.viam.com/utils/artifact"
 
 	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
+	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
+	dataprocess "github.com/viamrobotics/viam-orb-slam3/dataprocess"
 	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 

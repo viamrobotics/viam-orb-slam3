@@ -18,7 +18,6 @@ import (
 	"github.com/edaniels/golog"
 	"github.com/edaniels/gostream"
 	"github.com/pkg/errors"
-	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/pointcloud"
 	"go.viam.com/rdk/resource"
@@ -32,6 +31,7 @@ import (
 	"google.golang.org/grpc"
 
 	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
+	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
 	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 

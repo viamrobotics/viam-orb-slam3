@@ -10,12 +10,12 @@ import (
 
 	"github.com/edaniels/golog"
 	"github.com/pkg/errors"
-	"github.com/viamrobotics/viam-orb-slam3/config"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/test"
 	"go.viam.com/utils/pexec"
 
 	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
+	"github.com/viamrobotics/viam-orb-slam3/config"
 )
 
 // Service in the internal package includes additional exported functions relating to the data and

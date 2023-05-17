@@ -10,9 +10,8 @@ import (
 	"go.viam.com/rdk/pointcloud"
 	"go.viam.com/rdk/resource"
 	"go.viam.com/rdk/testutils/inject"
-	"go.viam.com/test"
-
 	"go.viam.com/slam/sensors/lidar"
+	"go.viam.com/test"
 )
 
 const (

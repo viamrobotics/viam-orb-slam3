@@ -15,10 +15,6 @@ import (
 
 	"github.com/edaniels/golog"
 	"github.com/pkg/errors"
-	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
-	"github.com/viamrobotics/viam-orb-slam3/dataprocess"
-	orbSlamSensorUtils "github.com/viamrobotics/viam-orb-slam3/sensors/utils"
-	orbSlamUtils "github.com/viamrobotics/viam-orb-slam3/utils"
 	"go.opencensus.io/trace"
 	pb "go.viam.com/api/service/slam/v1"
 	"go.viam.com/rdk/components/camera"
@@ -30,6 +26,11 @@ import (
 	goutils "go.viam.com/utils"
 	"go.viam.com/utils/pexec"
 	"golang.org/x/exp/slices"
+
+	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
+	"github.com/viamrobotics/viam-orb-slam3/dataprocess"
+	orbSlamSensorUtils "github.com/viamrobotics/viam-orb-slam3/sensors/utils"
+	orbSlamUtils "github.com/viamrobotics/viam-orb-slam3/utils"
 )
 
 var (
