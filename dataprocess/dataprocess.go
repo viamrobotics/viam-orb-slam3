@@ -3,12 +3,9 @@ package dataprocess
 
 import (
 	"bufio"
-	"bytes"
 	"os"
 	"path/filepath"
 	"time"
-
-	pc "go.viam.com/rdk/pointcloud"
 )
 
 const (
@@ -20,15 +17,6 @@ const (
 // into the filename.
 func CreateTimestampFilename(dataDirectory, primarySensorName, fileType string, timeStamp time.Time) string {
 	return filepath.Join(dataDirectory, primarySensorName+"_data_"+timeStamp.UTC().Format(SlamTimeFormat)+fileType)
-}
-
-// WritePCDToFile encodes the pointcloud and then saves it to the passed filename.
-func WritePCDToFile(pointcloud pc.PointCloud, filename string) error {
-	buf := new(bytes.Buffer)
-	if err := pc.ToPCD(pointcloud, buf, 1); err != nil {
-		return err
-	}
-	return WriteBytesToFile(buf.Bytes(), filename)
 }
 
 // WriteBytesToFile writes the passed bytes to the passed filename.
