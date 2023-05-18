@@ -26,13 +26,12 @@ import (
 	"go.viam.com/rdk/services/slam"
 	"go.viam.com/rdk/testutils/inject"
 	rdkutils "go.viam.com/rdk/utils"
-	slamConfig "go.viam.com/slam/config"
-	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
 	"go.viam.com/utils/artifact"
 	"google.golang.org/grpc"
 
 	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
+	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
 	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 
@@ -67,7 +66,7 @@ func closeOutSLAMService(t *testing.T, name string) {
 	t.Helper()
 
 	if name != "" {
-		err := slamTesthelper.ResetFolder(name)
+		err := testhelper.ResetFolder(name)
 		test.That(t, err, test.ShouldBeNil)
 	}
 }
@@ -99,7 +98,7 @@ func getGoodOrMissingDistortionParamsCamera(projA transform.Projector) *inject.C
 	return cam
 }
 
-func setupDeps(attr *slamConfig.Config) resource.Dependencies {
+func setupDeps(attr *orbSlamConfig.Config) resource.Dependencies {
 	deps := make(resource.Dependencies)
 	var projA transform.Projector
 	intrinsicsA := &transform.PinholeCameraIntrinsics{ // not the real camera parameters -- fake for test
@@ -398,7 +397,7 @@ func setupDeps(attr *slamConfig.Config) resource.Dependencies {
 
 func createSLAMService(
 	t *testing.T,
-	cfg *slamConfig.Config,
+	cfg *orbSlamConfig.Config,
 	logger golog.Logger,
 	bufferSLAMProcessLogs bool,
 	success bool,
@@ -437,13 +436,13 @@ func createSLAMService(
 
 func TestGeneralNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	t.Run("New slam service with no camera", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
 		test.That(t, err, test.ShouldBeNil)
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,
@@ -462,7 +461,7 @@ func TestGeneralNew(t *testing.T) {
 	})
 
 	t.Run("New slam service with bad camera", func(t *testing.T) {
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"gibberish"},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,
@@ -482,12 +481,12 @@ func TestGeneralNew(t *testing.T) {
 
 func TestORBSLAMNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	t.Run("New orbslamv3 service with good camera in slam mode rgbd", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"good_color_camera", "good_depth_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd"},
 			DataDirectory: name,
@@ -505,7 +504,7 @@ func TestORBSLAMNew(t *testing.T) {
 	})
 
 	t.Run("New orbslamv3 service in slam mode rgbd that errors due to a single camera", func(t *testing.T) {
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"good_color_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd"},
 			DataDirectory: name,
@@ -521,7 +520,7 @@ func TestORBSLAMNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service that errors due to missing distortion_parameters not being provided in config", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"missing_distortion_parameters_camera"},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,
@@ -541,7 +540,7 @@ func TestORBSLAMNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service that errors due to not being able to get camera properties", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"missing_camera_properties"},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,
@@ -561,7 +560,7 @@ func TestORBSLAMNew(t *testing.T) {
 	})
 
 	t.Run("New orbslamv3 service in slam mode rgbd that errors due cameras in the wrong order", func(t *testing.T) {
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"good_depth_camera", "good_color_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd"},
 			DataDirectory: name,
@@ -577,7 +576,7 @@ func TestORBSLAMNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service with good camera in slam mode mono", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"good_color_camera"},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,
@@ -595,7 +594,7 @@ func TestORBSLAMNew(t *testing.T) {
 	})
 
 	t.Run("New orbslamv3 service with camera that errors during call to Next", func(t *testing.T) {
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"bad_camera_no_stream"},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,
@@ -610,7 +609,7 @@ func TestORBSLAMNew(t *testing.T) {
 				"error getting data in desired mode: %v", attrCfg.Sensors[0]))
 	})
 	t.Run("New orbslamv3 service with camera that errors from bad intrinsics", func(t *testing.T) {
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"bad_camera_intrinsics"},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,
@@ -625,7 +624,7 @@ func TestORBSLAMNew(t *testing.T) {
 			transform.NewNoIntrinsicsError(fmt.Sprintf("Invalid size (%#v, %#v)", 0, 0)).Error())
 	})
 	t.Run("New orbslamv3 service with invalid sensor without Next implementation", func(t *testing.T) {
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"invalid_sensor_type"},
 			ConfigParams:  map[string]string{"mode": "mono"},
 			DataDirectory: name,
@@ -643,11 +642,11 @@ func TestORBSLAMNew(t *testing.T) {
 
 func TestORBSLAMDataProcess(t *testing.T) {
 	logger, obs := golog.NewObservedTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	grpcServer, port := setupTestGRPCServer(t)
-	attrCfg := &slamConfig.Config{
+	attrCfg := &orbSlamConfig.Config{
 		Sensors:       []string{"good_color_camera"},
 		ConfigParams:  map[string]string{"mode": "mono"},
 		DataDirectory: name,
@@ -719,11 +718,11 @@ func TestORBSLAMDataProcess(t *testing.T) {
 
 func TestEndpointFailures(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	grpcServer, port := setupTestGRPCServer(t)
-	attrCfg := &slamConfig.Config{
+	attrCfg := &orbSlamConfig.Config{
 		Sensors:       []string{"good_color_camera"},
 		ConfigParams:  map[string]string{"mode": "mono", "test_param": "viam"},
 		DataDirectory: name,
@@ -764,12 +763,12 @@ func TestEndpointFailures(t *testing.T) {
 
 func TestSLAMProcessSuccess(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	t.Run("Test online SLAM process with default parameters", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{"good_color_camera", "good_depth_camera"},
 			ConfigParams:  map[string]string{"mode": "rgbd", "test_param": "viam"},
 			DataDirectory: name,
@@ -810,7 +809,7 @@ func TestSLAMProcessSuccess(t *testing.T) {
 
 	t.Run("Test offline SLAM process with default parameters", func(t *testing.T) {
 		grpcServer, port := setupTestGRPCServer(t)
-		attrCfg := &slamConfig.Config{
+		attrCfg := &orbSlamConfig.Config{
 			Sensors:       []string{},
 			ConfigParams:  map[string]string{"mode": "mono", "test_param": "viam"},
 			DataDirectory: name,
@@ -854,11 +853,11 @@ func TestSLAMProcessSuccess(t *testing.T) {
 
 func TestSLAMProcessFail(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	grpcServer, port := setupTestGRPCServer(t)
-	attrCfg := &slamConfig.Config{
+	attrCfg := &orbSlamConfig.Config{
 		Sensors:       []string{"good_color_camera"},
 		ConfigParams:  map[string]string{"mode": "mono", "test_param": "viam"},
 		DataDirectory: name,

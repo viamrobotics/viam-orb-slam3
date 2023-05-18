@@ -23,13 +23,14 @@ import (
 	"go.viam.com/rdk/services/slam"
 	"go.viam.com/rdk/services/slam/grpchelper"
 	"go.viam.com/rdk/spatialmath"
-	slamConfig "go.viam.com/slam/config"
-	"go.viam.com/slam/dataprocess"
-	slamSensorUtils "go.viam.com/slam/sensors/utils"
-	slamUtils "go.viam.com/slam/utils"
 	goutils "go.viam.com/utils"
 	"go.viam.com/utils/pexec"
 	"golang.org/x/exp/slices"
+
+	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
+	"github.com/viamrobotics/viam-orb-slam3/dataprocess"
+	orbSlamSensorUtils "github.com/viamrobotics/viam-orb-slam3/sensors/utils"
+	orbSlamUtils "github.com/viamrobotics/viam-orb-slam3/utils"
 )
 
 var (
@@ -73,7 +74,7 @@ func SetDialMaxTimeoutSecForTesting(val int) {
 }
 
 func init() {
-	resource.RegisterService(slam.API, Model, resource.Registration[slam.Service, *slamConfig.Config]{
+	resource.RegisterService(slam.API, Model, resource.Registration[slam.Service, *orbSlamConfig.Config]{
 		Constructor: func(
 			ctx context.Context,
 			deps resource.Dependencies,
@@ -173,7 +174,7 @@ type orbslamService struct {
 // the robot. We assume there are at most two cameras and that we only require intrinsics from the first one.
 // Returns the name of the first camera.
 func configureCameras(ctx context.Context,
-	svcConfig *slamConfig.Config,
+	svcConfig *orbSlamConfig.Config,
 	deps resource.Dependencies,
 	logger golog.Logger,
 ) (string, []camera.Camera, error) {
@@ -251,7 +252,7 @@ func (orbSvc *orbslamService) GetPosition(ctx context.Context) (spatialmath.Pose
 	componentReference := resp.GetComponentReference()
 	returnedExt := resp.Extra.AsMap()
 
-	return slamUtils.CheckQuaternionFromClientAlgo(pose, componentReference, returnedExt)
+	return orbSlamUtils.CheckQuaternionFromClientAlgo(pose, componentReference, returnedExt)
 }
 
 // GetPointCloudMap creates a request, calls the slam algorithms GetPointCloudMap endpoint and returns a callback
@@ -283,7 +284,7 @@ func New(ctx context.Context,
 	ctx, span := trace.StartSpan(ctx, "viamorbslam3::New")
 	defer span.End()
 
-	svcConfig, err := resource.NativeConfig[*slamConfig.Config](c)
+	svcConfig, err := resource.NativeConfig[*orbSlamConfig.Config](c)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +300,7 @@ func New(ctx context.Context,
 			c.Model.Name, svcConfig.ConfigParams["mode"])
 	}
 
-	if err = slamConfig.SetupDirectories(svcConfig.DataDirectory, logger); err != nil {
+	if err = orbSlamConfig.SetupDirectories(svcConfig.DataDirectory, logger); err != nil {
 		return nil, errors.Wrap(err, "unable to setup working directories")
 	}
 
@@ -319,7 +320,7 @@ func New(ctx context.Context,
 		}
 	}
 
-	port, dataRateMsec, mapRateSec, useLiveData, deleteProcessedData, err := slamConfig.GetOptionalParameters(
+	port, dataRateMsec, mapRateSec, useLiveData, deleteProcessedData, err := orbSlamConfig.GetOptionalParameters(
 		svcConfig,
 		localhost0,
 		defaultDataRateMsec,
@@ -371,7 +372,7 @@ func New(ctx context.Context,
 		return nil, errors.Wrap(err, "error with slam service slam process")
 	}
 
-	client, clientClose, err := slamConfig.SetupGRPCConnection(ctx, orbSvc.port, dialMaxTimeoutSec, logger)
+	client, clientClose, err := orbSlamConfig.SetupGRPCConnection(ctx, orbSvc.port, dialMaxTimeoutSec, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "error with initial grpc client to slam algorithm")
 	}
@@ -472,7 +473,7 @@ func (orbSvc *orbslamService) GetSLAMProcessConfig() pexec.ProcessConfig {
 	var args []string
 
 	args = append(args, "-sensors="+orbSvc.primarySensorName)
-	args = append(args, "-config_param="+slamUtils.DictToString(orbSvc.configParams))
+	args = append(args, "-config_param="+orbSlamUtils.DictToString(orbSvc.configParams))
 	args = append(args, "-data_rate_ms="+strconv.Itoa(orbSvc.dataRateMs))
 	args = append(args, "-map_rate_sec="+strconv.Itoa(orbSvc.mapRateSec))
 	args = append(args, "-data_dir="+orbSvc.dataDirectory)
@@ -605,7 +606,7 @@ func (orbSvc *orbslamService) getAndSaveData(
 			return nil, errors.Errorf("expected 1 camera for mono slam, found %v", len(cams))
 		}
 
-		image, release, err := slamSensorUtils.GetPNGImage(ctx, cams[0])
+		image, release, err := orbSlamSensorUtils.GetPNGImage(ctx, cams[0])
 		if release != nil {
 			defer release()
 		}
@@ -681,7 +682,7 @@ func (orbSvc *orbslamService) getSimultaneousColorAndDepth(
 		goutils.PanicCapturingGo(func() {
 			defer orbSvc.activeBackgroundWorkers.Done()
 			defer wg.Done()
-			images[iLoop], releaseFuncs[iLoop], errs[iLoop] = slamSensorUtils.GetPNGImage(ctx, cams[iLoop])
+			images[iLoop], releaseFuncs[iLoop], errs[iLoop] = orbSlamSensorUtils.GetPNGImage(ctx, cams[iLoop])
 		})
 	}
 	wg.Wait()
