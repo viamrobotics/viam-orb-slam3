@@ -15,13 +15,13 @@ import (
 	"github.com/edaniels/golog"
 	"github.com/pkg/errors"
 	"go.viam.com/rdk/rimage/transform"
-	slamConfig "go.viam.com/slam/config"
-	"go.viam.com/slam/dataprocess"
-	slamTesthelper "go.viam.com/slam/testhelper"
 	"go.viam.com/test"
 	"gopkg.in/yaml.v2"
 
 	viamorbslam3 "github.com/viamrobotics/viam-orb-slam3"
+	orbSlamConfig "github.com/viamrobotics/viam-orb-slam3/config"
+	"github.com/viamrobotics/viam-orb-slam3/dataprocess"
+	"github.com/viamrobotics/viam-orb-slam3/internal/testhelper"
 )
 
 const yamlFilePrefixBytes = "%YAML:1.0\n"
@@ -61,12 +61,12 @@ func findLastYAML(folderName string) (string, string, error) {
 
 func TestOrbslamYAMLNew(t *testing.T) {
 	logger := golog.NewTestLogger(t)
-	name, err := slamTesthelper.CreateTempFolderArchitecture(logger)
+	name, err := testhelper.CreateTempFolderArchitecture(logger)
 	test.That(t, err, test.ShouldBeNil)
 
 	useLiveData := true
 	dataRateMs := 200
-	attrCfgGood := &slamConfig.Config{
+	attrCfgGood := &orbSlamConfig.Config{
 		Sensors: []string{"good_color_camera"},
 		ConfigParams: map[string]string{
 			"mode":              "mono",
@@ -81,7 +81,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		Port:          "localhost:4445",
 		UseLiveData:   &useLiveData,
 	}
-	attrCfgGoodHighDataRateMsec := &slamConfig.Config{
+	attrCfgGoodHighDataRateMsec := &orbSlamConfig.Config{
 		Sensors: []string{"good_color_camera"},
 		ConfigParams: map[string]string{
 			"mode":              "mono",
@@ -96,7 +96,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		Port:          "localhost:4445",
 		UseLiveData:   &useLiveData,
 	}
-	attrCfgBadCam := &slamConfig.Config{
+	attrCfgBadCam := &orbSlamConfig.Config{
 		Sensors: []string{"bad_camera_intrinsics"},
 		ConfigParams: map[string]string{
 			"mode":              "mono",
@@ -216,7 +216,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 
 	t.Run("New orbslamv3 service with camera that errors from bad orbslam params", func(t *testing.T) {
 		// check if a param is empty
-		attrCfgBadParam1 := &slamConfig.Config{
+		attrCfgBadParam1 := &orbSlamConfig.Config{
 			Sensors: []string{"good_color_camera"},
 			ConfigParams: map[string]string{
 				"mode":              "mono",
@@ -235,7 +235,7 @@ func TestOrbslamYAMLNew(t *testing.T) {
 		_, err := createSLAMService(t, attrCfgBadParam1, logger, false, false, testExecutableName)
 		test.That(t, err.Error(), test.ShouldContainSubstring, "Parameter orb_n_features has an invalid definition")
 
-		attrCfgBadParam2 := &slamConfig.Config{
+		attrCfgBadParam2 := &orbSlamConfig.Config{
 			Sensors: []string{"good_color_camera"},
 			ConfigParams: map[string]string{
 				"mode":              "mono",

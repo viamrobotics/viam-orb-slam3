@@ -15,8 +15,9 @@ import (
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/rimage/transform"
 	"go.viam.com/rdk/utils"
-	"go.viam.com/slam/dataprocess"
 	"gopkg.in/yaml.v2"
+
+	"github.com/viamrobotics/viam-orb-slam3/dataprocess"
 )
 
 const (
