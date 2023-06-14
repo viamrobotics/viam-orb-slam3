@@ -5,8 +5,8 @@ import (
 	"context"
 	"image"
 
-	"github.com/edaniels/gostream"
 	"github.com/pkg/errors"
+	"github.com/viamrobotics/gostream"
 	"go.viam.com/rdk/components/camera"
 	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/utils"
