@@ -676,7 +676,7 @@ int FindFrameIndex(const std::vector<std::string> &filesRGB,
             }
         }
     }
-    // Find the file generated most recently, used mostly in online mode
+    // Find the file generated most recently, used mostly in online mode.
     else if (interest == FileParserMethod::Recent) {
         int i = (int)filesRGB.size() - 2;
 
