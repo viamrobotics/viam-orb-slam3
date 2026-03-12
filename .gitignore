@@ -20,3 +20,7 @@ bin/
 
 # code editor settings
 .vscode
+
+# Claude Code
+.claude/worktrees
+.claude/settings.local.json
