@@ -28,8 +28,6 @@ Install viam-orb-slam3:
     brew tap viamrobotics/brews && brew install orb-grpc-server
     ```
 
-For next steps, see the [Run ORB-SLAM3 on your Robot with a Webcam Tutorial](https://docs.viam.com/services/slam/run-slam-webcam/).
-
 ## Development
 
 ### Download 
